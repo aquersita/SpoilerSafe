@@ -17,3 +17,8 @@ Para elevar este proyecto por encima de un CRUD estándar, hemos incluido:
 ## 📋 Objetivos
 * **General:** Crear una comunidad de reacciones protegida contra spoilers accidentales[cite: 31].
 * **Específicos:** Implementar capas de visibilidad según el progreso y diseñar un buscador por temporadas[cite: 32].
+
+# SpoilerSafe
+SpoilerSafe es una plataforma diseñada para que la comunidad otaku pueda compartir sus emociones tras ver un capítulo sin riesgo de arruinar la experiencia a los demás.
+
+1479dfabeb2cc81c08838752a163a86df1e1b855

@@ -1,0 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;700;900&display=swap");
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@font-face {
+    font-family: 'BloodCrow';
+    src: url('/fonts/bloodcrow.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.top-10-number {
+    -webkit-text-stroke: 4px #4b5563;
+    paint-order: stroke fill;
+}

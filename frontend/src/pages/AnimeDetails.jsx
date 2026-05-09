@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { getAnime, getTrending } from '../services/animeService';
+import { getAnime } from '../services/animeService';
 import { checkInWatchlist, addToWatchlist, removeFromWatchlist } from '../services/watchlistService';
 import { checkIsFavorite, addFavorite, removeFavorite } from '../services/favoritesService';
 import { getAnimeProgress, markEpisodeWatched } from '../services/progressService';
@@ -17,7 +17,6 @@ const AnimeDetails = ({ user }) => {
 
     const [anime, setAnime] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [trending, setTrending] = useState([]);
     const [capsules, setCapsules] = useState([]);
     const [newCapsuleText, setNewCapsuleText] = useState('');
     const [unlockEpisode, setUnlockEpisode] = useState(1);
@@ -54,10 +53,7 @@ const AnimeDetails = ({ user }) => {
                 filtered.unshift(historyItem);
                 localStorage.setItem('spoilersafe_history', JSON.stringify(filtered.slice(0, 50)));
 
-                const trendRes = await getTrending();
-                setTrending(trendRes.data?.Page?.media?.slice(0, 5) || []);
-
-                if (currentUser?.uid) {
+if (currentUser?.uid) {
                     const uid = currentUser.uid;
                     try {
                         setInWatchlist(await checkInWatchlist(uid, id));
@@ -322,27 +318,32 @@ const AnimeDetails = ({ user }) => {
             </section>
 
             {/* Dónde Ver Section */}
-            {anime.externalLinks && anime.externalLinks.length > 0 && (
-                <section className="py-10 bg-gray-50 border-t border-gray-100">
-                    <div className="max-w-[1600px] mx-auto px-8">
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2 mb-6">
-                            <span className="w-1 h-6 bg-primary block rounded-full"></span>
-                            Dónde Ver Oficialmente
-                        </h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                            {anime.externalLinks.filter(l => l.site).map((link, i) => (
-                                <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                                   className="flex items-center gap-3 bg-white border border-gray-200 hover:border-primary hover:shadow-md p-4 rounded-lg group transition-all">
-                                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 shrink-0">
-                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-lg">open_in_new</span>
-                                    </div>
-                                    <span className="text-sm font-bold text-gray-700 group-hover:text-primary truncate transition-colors">{link.site}</span>
-                                </a>
-                            ))}
+            {(() => {
+                const katanime = { site: 'KATANIME', url: `https://katanime.es/buscar?q=${encodeURIComponent(title)}` };
+                const anilistLinks = (anime.externalLinks || []).filter(l => l.site && l.url);
+                const allLinks = [katanime, ...anilistLinks];
+                return (
+                    <section className="py-10 bg-gray-50 border-t border-gray-100">
+                        <div className="max-w-[1600px] mx-auto px-8">
+                            <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2 mb-6">
+                                <span className="w-1 h-6 bg-primary block rounded-full"></span>
+                                Dónde Ver
+                            </h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                {allLinks.map((link, i) => (
+                                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                                       className="flex items-center gap-3 bg-white border border-gray-200 hover:border-primary hover:shadow-md p-4 rounded-lg group transition-all">
+                                        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 shrink-0">
+                                            <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-lg">open_in_new</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-gray-700 group-hover:text-primary truncate transition-colors">{link.site}</span>
+                                    </a>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                </section>
-            )}
+                    </section>
+                );
+            })()}
 
             {/* Episodios Section */}
             <section className="py-12 bg-white border-t border-gray-100 min-h-[400px]">

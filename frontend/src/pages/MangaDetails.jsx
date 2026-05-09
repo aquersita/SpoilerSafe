@@ -291,36 +291,29 @@ const MangaDetails = () => {
                         </div>
                     )}
 
-                    {/* Dónde Leer — solo plataformas oficiales/legales */}
-                    {(() => {
-                        const OFFICIAL = ['Viz', 'Shonen Jump', 'Manga Plus', 'MangaPlus', 'Crunchyroll', 'BookWalker', 'ComiXology', 'Amazon', 'Yen Press', 'Seven Seas', 'Dark Horse', 'Kodansha', 'Square Enix', 'Shogakukan', 'Shueisha'];
-                        const official = (manga.externalLinks || []).filter(l =>
-                            OFFICIAL.some(name => l.site?.toLowerCase().includes(name.toLowerCase()))
-                        );
-                        if (!official.length) return null;
-                        return (
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">link</span>
-                                    Dónde Leer Oficialmente
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                    {official.map((link, i) => (
-                                        <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                                            className="flex items-center gap-3 bg-white border border-gray-200 hover:border-primary hover:shadow-md p-4 rounded-xl group transition-all">
-                                            <div className="size-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 transition-colors shrink-0">
-                                                <span className="material-symbols-outlined text-gray-400 group-hover:text-primary">open_in_new</span>
-                                            </div>
-                                            <div className="flex-1 overflow-hidden">
-                                                <p className="text-sm font-bold text-gray-900 truncate group-hover:text-primary transition-colors">{link.site}</p>
-                                                <p className="text-xs text-gray-500 truncate">Ir a la web</p>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
+                    {/* Dónde Leer */}
+                    {(manga.externalLinks || []).filter(l => l.site && l.url).length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">link</span>
+                                Dónde Leer
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                {manga.externalLinks.filter(l => l.site && l.url).map((link, i) => (
+                                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-3 bg-white border border-gray-200 hover:border-primary hover:shadow-md p-4 rounded-xl group transition-all">
+                                        <div className="size-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 transition-colors shrink-0">
+                                            <span className="material-symbols-outlined text-gray-400 group-hover:text-primary">open_in_new</span>
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-sm font-bold text-gray-900 truncate group-hover:text-primary transition-colors">{link.site}</p>
+                                            <p className="text-xs text-gray-500 truncate">Ir a la web</p>
+                                        </div>
+                                    </a>
+                                ))}
                             </div>
-                        );
-                    })()}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

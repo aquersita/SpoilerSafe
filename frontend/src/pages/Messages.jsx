@@ -123,16 +123,18 @@ export default function Messages() {
     setMobileView('chat');
     setSearchQ('');
     setUserResults([]);
-    navigate(`/messages/${otherUsername}`, { replace: true });
+    // replaceState updates the URL bar without triggering React Router's
+    // paramUsername effect, which would re-open the convo and show a loading flash.
+    window.history.replaceState(null, '', `/messages/${otherUsername}`);
     markRead(convo.id, firebaseUser?.uid);
-  }, [firebaseUser?.uid, navigate]);
+  }, [firebaseUser?.uid]);
 
   const handleUserResult = useCallback(async (u) => {
     setSearchQ('');
     setUserResults([]);
     await openConvoByUsername(u.username);
-    navigate(`/messages/${u.username}`, { replace: true });
-  }, [openConvoByUsername, navigate]);
+    window.history.replaceState(null, '', `/messages/${u.username}`);
+  }, [openConvoByUsername]);
 
   const send = useCallback(async () => {
     const text = input.trim();

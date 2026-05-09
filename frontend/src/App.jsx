@@ -7,7 +7,25 @@ import Home from './pages/Home'
 import AnimeDetails from './pages/AnimeDetails'
 import EpisodePlayer from './pages/EpisodePlayer'
 import UserProfile from './pages/UserProfile'
+import ComingSoon from './pages/ComingSoon'
 import Sidebar from './components/Sidebar'
+import { Toaster } from 'react-hot-toast'
+import AnimatedTransitions from './components/AnimatedTransitions';
+import Catalog from './pages/Catalog';
+import Settings from './pages/Settings';
+import Premium from './pages/Premium';
+import Manga from './pages/Manga';
+import MangaDetails from './pages/MangaDetails';
+import Games from './pages/Games';
+import Store from './pages/Store';
+import News from './pages/News';
+import NewReleases from './pages/NewReleases';
+import Watchlist from './pages/Watchlist';
+import History from './pages/History';
+import AdminPanel from './pages/AdminPanel'
+import ChatWidget from './components/ChatWidget'
+import Messages from './pages/Messages';
+import { API } from './utils/api.js';
 
 // Mock removed - fetching from API
 function App() {
@@ -22,7 +40,7 @@ function App() {
     // Check Backend Health & Fetch Data
     const init = async () => {
       try {
-        await axios.get('http://localhost:8000/');
+        await axios.get(`${API}/`);
         setBackendStatus('Conectado');
         setIsBackendUp(true);
 
@@ -30,7 +48,7 @@ function App() {
         const token = localStorage.getItem('token');
         if (token) {
           try {
-            const profileRes = await axios.get('http://localhost:8000/users/me/profile', {
+            const profileRes = await axios.get(`${API}/users/me/profile`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             setUser(profileRes.data);
@@ -41,7 +59,7 @@ function App() {
         }
 
         // Fetch Trending
-        const res = await axios.get('http://localhost:8000/anime/trending');
+        const res = await axios.get(`${API}/anime/trending`);
         const trending = res.data.data.Page.media.map(a => ({
           id: a.id,
           title: a.title.romaji,
@@ -61,7 +79,7 @@ function App() {
   const handleLogin = async () => {
     const token = localStorage.getItem('token');
     if (token) {
-      const profileRes = await axios.get('http://localhost:8000/users/me/profile', {
+      const profileRes = await axios.get(`${API}/users/me/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(profileRes.data);
@@ -76,7 +94,24 @@ function App() {
         onLogoClick={() => navigate('/')}
         user={user}
       />
+      <Toaster position="bottom-right" toastOptions={{
+        style: {
+          background: '#333',
+          color: '#fff',
+          borderRadius: '4px',
+          fontSize: '14px',
+          fontWeight: 'bold',
+        },
+        success: {
+          iconTheme: {
+            primary: '#f97316',
+            secondary: '#fff',
+          },
+        },
+      }} />
       <Sidebar />
+
+      <ChatWidget />
 
       <main className="md:pl-16 pt-16 min-h-screen">
         <Routes>
@@ -97,6 +132,22 @@ function App() {
           <Route path="/anime/:id" element={<AnimeDetails user={user} />} />
           <Route path="/anime/:id/episode/:episodeNumber" element={<EpisodePlayer user={user} />} />
           <Route path="/users/:username" element={<UserProfile />} />
+
+          {/* Nuevas Secciones */}
+          <Route path="/manga" element={<Manga />} />
+          <Route path="/manga/:id" element={<MangaDetails />} />
+          <Route path="/games" element={<Games />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/new-releases" element={<NewReleases />} />
+          <Route path="/store" element={<Store />} />
+          <Route path="/watchlist" element={<Watchlist user={user} />} />
+          <Route path="/premium" element={<Premium user={user} />} />
+          <Route path="/catalog" element={<Catalog />} />
+          <Route path="/settings" element={<Settings user={user} onUserUpdate={setUser} />} />
+          <Route path="/history" element={<History user={user} />} />
+          <Route path="/admin" element={<AdminPanel user={user} />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/messages/:username" element={<Messages />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

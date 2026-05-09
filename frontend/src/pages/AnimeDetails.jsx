@@ -1,13 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
 
+import { isAgeVerified } from '../utils/ageGate';
 const AnimeDetails = ({ user }) => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [anime, setAnime] = useState(null);
     const [loading, setLoading] = useState(true);
     const [trending, setTrending] = useState([]);
+    const [capsules, setCapsules] = useState([]);
+    const [newCapsuleText, setNewCapsuleText] = useState('');
+    const [unlockEpisode, setUnlockEpisode] = useState(1);
+    const [epsToShow, setEpsToShow] = useState(24);
+    const [inWatchlist, setInWatchlist] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [watchedEps, setWatchedEps] = useState(new Set());
+    const [ageGateVisible, setAgeGateVisible] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -15,11 +21,56 @@ const AnimeDetails = ({ user }) => {
 
         const fetchAnime = async () => {
             setLoading(true);
+            setEpsToShow(24);
             try {
-                const res = await axios.get(`http://localhost:8000/anime/${id}`);
-                setAnime(res.data.data.Media);
-                const trendRes = await axios.get('http://localhost:8000/anime/trending');
+                const res = await axios.get(`${API}/anime/${id}`);
+                const mediaData = res.data.data.Media;
+                setAnime(mediaData);
+                if (mediaData.isAdult && !isAgeVerified()) {
+                    setAgeGateVisible(true);
+                }
+
+                // Save to history
+                const historyItem = {
+                    title: mediaData.title?.romaji || mediaData.title?.english || 'Anime',
+                    image: mediaData.coverImage?.large,
+                    path: `/anime/${id}`,
+                    visitedAt: new Date().toISOString()
+                };
+                const existing = JSON.parse(localStorage.getItem('spoilersafe_history') || '[]');
+                const filtered = existing.filter(h => h.path !== historyItem.path);
+                filtered.unshift(historyItem);
+                localStorage.setItem('spoilersafe_history', JSON.stringify(filtered.slice(0, 50)));
+                const trendRes = await axios.get(`${API}/anime/trending`);
                 setTrending(trendRes.data.data.Page.media.slice(0, 5));
+
+                const token = localStorage.getItem('token');
+                if (token) {
+                    try {
+                        const wlRes = await axios.get(`${API}/watchlist/check/${id}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        setInWatchlist(wlRes.data.in_watchlist);
+                    } catch (e) { /* not logged in */ }
+                    try {
+                        const favRes = await axios.get(`${API}/favorites/check/anime/${id}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        setIsFavorite(favRes.data.is_favorite);
+                    } catch (e) { /* ignore */ }
+                    try {
+                        const progRes = await axios.get(`${API}/anime/${id}/progress`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        setWatchedEps(new Set(progRes.data.watched_episodes));
+                    } catch (e) { /* ignore */ }
+                    try {
+                        const capRes = await axios.get(`${API}/anime/${id}/capsules`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        setCapsules(capRes.data);
+                    } catch (e) { console.error(e); }
+                }
             } catch (err) {
                 console.error("Error fetching anime:", err);
             } finally {
@@ -32,6 +83,34 @@ const AnimeDetails = ({ user }) => {
         }
     }, [id]);
 
+    const handleCreateCapsule = async () => {
+        if (!user) {
+            toast.error("Debes iniciar sesión para crear cápsulas.");
+            return;
+        }
+        if (!newCapsuleText.trim()) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API}/anime/capsule`, {
+                anime_id: parseInt(id),
+                unlock_episode: parseInt(unlockEpisode),
+                content: newCapsuleText
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success(`Cápsula enterrada! Se abrirá en el ep ${unlockEpisode}`);
+            setNewCapsuleText('');
+            
+            const capRes = await axios.get(`${API}/anime/${id}/capsules`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setCapsules(capRes.data);
+        } catch (err) {
+            toast.error("Error al crear la cápsula");
+        }
+    };
+
     if (loading) {
         return <div className="min-h-screen bg-white flex items-center justify-center">Cargando detalles...</div>;
     }
@@ -40,83 +119,422 @@ const AnimeDetails = ({ user }) => {
         return <div className="min-h-screen bg-white flex items-center justify-center">Anime no encontrado</div>;
     }
 
+    if (ageGateVisible) {
+        return (
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
+                <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+                    <div className="w-16 h-16 rounded-full bg-red-900/40 border border-red-500/30 flex items-center justify-center mx-auto mb-5">
+                        <span className="material-symbols-outlined text-red-400 text-4xl">18_up_rating</span>
+                    </div>
+                    <h2 className="text-white font-black text-2xl mb-2">Contenido +18</h2>
+                    <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                        Este anime está clasificado para mayores de 18 años.<br />¿Confirmas que tienes 18 años o más?
+                    </p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => {
+                                localStorage.setItem('spoilersafe_age_verified', 'true');
+                                setAgeGateVisible(false);
+                            }}
+                            className="flex-1 bg-primary hover:bg-orange-500 text-white font-black py-3 rounded-xl transition-all hover:scale-105 active:scale-100"
+                        >
+                            Sí, tengo +18
+                        </button>
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-3 rounded-xl transition-colors"
+                        >
+                            Volver
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const title = anime.title.romaji || anime.title.english;
-    const bannerImage = anime.bannerImage || anime.coverImage.extraLarge;
     const coverImage = anime.coverImage.extraLarge || anime.coverImage.large;
+    // Preferimos streaming thumbnail (1920×1080 16:9) sobre el bannerImage de AniList (~1900×400)
+    // y ambos sobre el cartel vertical como último recurso
+    const streamingThumb = anime.streamingEpisodes?.find(ep => ep.thumbnail)?.thumbnail;
+    const bannerImage = streamingThumb || anime.bannerImage || coverImage;
+    // For ongoing anime, nextAiringEpisode.episode - 1 = total aired so far
+    const totalEpisodes = anime.episodes || (anime.nextAiringEpisode ? anime.nextAiringEpisode.episode - 1 : 12);
 
     return (
         <React.Fragment>
-            <section className="relative w-full h-[85vh] overflow-hidden">
-                <div className="absolute inset-0 z-0 bg-gray-900">
-                    <img alt={title} className="w-full h-full object-cover object-top opacity-80 mix-blend-overlay" src={bannerImage} />
-                    <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-transparent z-10 w-full md:w-2/3"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent z-10 h-1/2 bottom-0 top-auto"></div>
-                </div>
-                <div className="relative z-20 h-full max-w-[1600px] mx-auto px-8 flex flex-col justify-center">
-                    <div className="w-full lg:w-3/4 space-y-6 mt-12 pl-4 md:pl-0">
-                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-tight tracking-tighter drop-shadow-lg" style={{ fontFamily: "'Arial Black', sans-serif" }}>
-                            {title.toUpperCase()}
-                        </h1>
-                        <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
-                            <span className="bg-primary text-white px-2 py-0.5 rounded text-xs">{anime.status || 'FINALIZADO'}</span>
-                            <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                            {anime.genres?.slice(0, 3).map((g, i) => (
-                                <span key={i} className="text-gray-300">{g}</span>
-                            ))}
-                            <span className="bg-white/10 text-white px-2 py-0.5 text-xs rounded border border-white/20">Sub | Dob</span>
-                        </div>
-                        <p className="text-gray-300 text-base md:text-lg leading-relaxed max-w-3xl font-medium line-clamp-4" dangerouslySetInnerHTML={{ __html: anime.description || 'Sin descripción disponible.' }}></p>
+            {/* ── HERO ── */}
+            <section className="relative w-full h-[88vh] min-h-[560px] overflow-hidden bg-gray-950">
+                {/* Banner image — sin blend modes */}
+                <img
+                    alt={title}
+                    className="absolute inset-0 w-full h-full object-cover object-top opacity-45"
+                    src={bannerImage}
+                />
+                {/* Gradiente lateral izquierdo */}
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/75 to-transparent z-10" />
+                {/* Gradiente inferior hacia la siguiente sección */}
+                <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-gray-50 to-transparent z-10" />
 
-                        <div className="flex items-center gap-4 pt-4">
-                            <button onClick={() => navigate(`/anime/${id}/episode/1`)} className="bg-primary hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-8 rounded-sm transition-all focus:outline-none flex items-center gap-2 uppercase tracking-wide shadow-lg">
-                                <span className="material-icons">play_arrow</span>
-                                Ver T1 E1
-                            </button>
-                            {anime.trailer?.id && (
-                                <button onClick={() => window.open(`https://youtube.com/watch?v=${anime.trailer.id}`, '_blank')} className="bg-primary hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-8 rounded-sm transition-all focus:outline-none flex items-center gap-2 uppercase tracking-wide shadow-lg">
-                                    <span className="material-icons-outlined">movie</span>
-                                    Trailer
+                <div className="relative z-20 h-full max-w-[1400px] mx-auto px-6 md:px-10 flex items-center">
+                    <div className="flex items-end gap-10 w-full pb-12">
+
+                        {/* Cover poster — visible en lg+ */}
+                        <div className="hidden lg:block shrink-0 self-end">
+                            <img
+                                src={coverImage}
+                                alt={title}
+                                className="w-48 xl:w-56 rounded-xl shadow-2xl shadow-black/60 border border-white/10 object-cover aspect-[2/3]"
+                            />
+                        </div>
+
+                        {/* Contenido principal */}
+                        <div className="flex-1 space-y-4 max-w-2xl">
+                            {/* Chips de info */}
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                                <span className="bg-primary text-white px-3 py-1 rounded-full uppercase tracking-wide">
+                                    {anime.status === 'RELEASING' ? 'En emisión' : anime.status === 'FINISHED' ? 'Finalizado' : anime.status || 'Finalizado'}
+                                </span>
+                                {anime.averageScore && (
+                                    <span className="flex items-center gap-1 bg-yellow-400/15 text-yellow-300 border border-yellow-400/30 px-2.5 py-1 rounded-full">
+                                        <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                        {(anime.averageScore / 10).toFixed(1)}
+                                    </span>
+                                )}
+                                {anime.seasonYear && (
+                                    <span className="text-gray-400 font-normal">{anime.seasonYear}</span>
+                                )}
+                                <span className="text-gray-500">·</span>
+                                {anime.genres?.slice(0, 3).map((g, i) => (
+                                    <span key={i} className="text-gray-300 font-normal">{g}</span>
+                                ))}
+                            </div>
+
+                            {/* Título */}
+                            <h1
+                                className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-none tracking-tight drop-shadow-xl"
+                                style={{ fontFamily: "'Arial Black', sans-serif" }}
+                            >
+                                {title}
+                            </h1>
+
+                            {/* Descripción */}
+                            <p
+                                className="text-gray-300 text-sm md:text-base leading-relaxed line-clamp-3 max-w-xl"
+                                dangerouslySetInnerHTML={{ __html: anime.description || 'Sin descripción disponible.' }}
+                            />
+
+                            {/* Botones — jerarquía clara */}
+                            <div className="flex items-center gap-3 pt-2 flex-wrap">
+                                {/* Primario */}
+                                <button
+                                    onClick={() => navigate(`/anime/${id}/episode/1`)}
+                                    className="flex items-center gap-2 bg-primary hover:bg-orange-500 active:bg-orange-700 text-white font-black py-3 px-7 rounded-lg shadow-lg shadow-primary/40 transition-all hover:scale-105 active:scale-100 text-sm uppercase tracking-wide"
+                                >
+                                    <span className="material-icons text-xl">play_arrow</span>
+                                    Ver Episodio 1
                                 </button>
-                            )}
-                            <button onClick={() => alert("Añadido a favoritos")} className="bg-primary hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-4 rounded-sm transition-all focus:outline-none flex items-center justify-center shadow-lg">
-                                <span className="material-icons-outlined text-xl">bookmark_border</span>
-                            </button>
+
+                                {/* Secundario — tráiler */}
+                                {anime.trailer?.id && (
+                                    <button
+                                        onClick={() => window.open(`https://youtube.com/watch?v=${anime.trailer.id}`, '_blank')}
+                                        className="flex items-center gap-2 border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all text-sm uppercase tracking-wide"
+                                    >
+                                        <span className="material-icons-outlined">movie</span>
+                                        Tráiler
+                                    </button>
+                                )}
+
+                                {/* Favorito */}
+                                <button
+                                    title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                                    onClick={async () => {
+                                        const token = localStorage.getItem('token');
+                                        if (!token) { toast.error('Inicia sesión primero'); return; }
+                                        try {
+                                            if (isFavorite) {
+                                                await axios.delete(`${API}/favorites/anime/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                                setIsFavorite(false);
+                                                toast.success('Eliminado de favoritos');
+                                            } else {
+                                                await axios.post(`${API}/favorites`, {
+                                                    media_id: parseInt(id),
+                                                    media_type: 'anime',
+                                                    title: anime.title?.romaji || anime.title?.english || '',
+                                                    cover_image: anime.coverImage?.extraLarge || anime.coverImage?.large || '',
+                                                    banner_image: anime.bannerImage || '',
+                                                    genres: anime.genres || [],
+                                                    average_score: anime.averageScore || null,
+                                                }, { headers: { Authorization: `Bearer ${token}` } });
+                                                setIsFavorite(true);
+                                                toast.success('¡Añadido a favoritos! ❤️');
+                                            }
+                                        } catch (err) {
+                                            if (err.response?.status === 409) { setIsFavorite(true); }
+                                            else toast.error('Error al actualizar favoritos');
+                                        }
+                                    }}
+                                    className={`p-3 rounded-lg border-2 transition-all hover:scale-105 active:scale-100 ${
+                                        isFavorite
+                                            ? 'border-rose-400 bg-rose-500/20 text-rose-300 shadow-md shadow-rose-500/20'
+                                            : 'border-white/30 hover:border-rose-400/60 text-white bg-white/5 hover:bg-rose-500/10'
+                                    }`}
+                                >
+                                    <span className="material-icons-outlined text-xl">{isFavorite ? 'favorite' : 'favorite_border'}</span>
+                                </button>
+
+                                {/* Terciario — watchlist (solo icono) */}
+                                <button
+                                    title={inWatchlist ? 'Quitar de mi lista' : 'Añadir a mi lista'}
+                                    onClick={async () => {
+                                        const token = localStorage.getItem('token');
+                                        if (!token) { toast.error('Inicia sesión primero'); return; }
+                                        try {
+                                            if (inWatchlist) {
+                                                await axios.delete(`${API}/watchlist/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                                setInWatchlist(false);
+                                                toast.success('Eliminado de tu lista');
+                                            } else {
+                                                await axios.post(`${API}/watchlist`, { anime_id: parseInt(id) }, { headers: { Authorization: `Bearer ${token}` } });
+                                                setInWatchlist(true);
+                                                toast.success('Añadido a tu lista');
+                                            }
+                                        } catch (err) {
+                                            if (err.response?.status === 409) toast.error('Ya está en tu lista');
+                                            else toast.error('Error al actualizar la lista');
+                                        }
+                                    }}
+                                    className={`p-3 rounded-lg border-2 transition-all hover:scale-105 active:scale-100 ${
+                                        inWatchlist
+                                            ? 'border-primary bg-primary/20 text-primary shadow-md shadow-primary/20'
+                                            : 'border-white/30 hover:border-white/60 text-white bg-white/5 hover:bg-white/10'
+                                    }`}
+                                >
+                                    <span className="material-icons-outlined text-xl">{inWatchlist ? 'bookmark' : 'bookmark_border'}</span>
+                                </button>
+                            </div>
+
+                            {/* Stats rápidos */}
+                            <div className="flex items-center gap-5 text-xs text-gray-500 pt-1">
+                                <span>{totalEpisodes} episodios</span>
+                                {anime.season && <span className="capitalize">{anime.season.toLowerCase()} {anime.seasonYear}</span>}
+                                <span className="bg-white/10 text-gray-300 px-2 py-0.5 rounded border border-white/10">Sub · Dob</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
+            {/* Dónde Ver Section */}
+            {anime.externalLinks && anime.externalLinks.length > 0 && (
+                <section className="py-10 bg-gray-50 border-t border-gray-100">
+                    <div className="max-w-[1600px] mx-auto px-8">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2 mb-6">
+                            <span className="w-1 h-6 bg-primary block rounded-full"></span>
+                            Dónde Ver Oficialmente
+                        </h2>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {anime.externalLinks.filter(l => l.site).map((link, i) => (
+                                <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                                   className="flex items-center gap-3 bg-white border border-gray-200 hover:border-primary hover:shadow-md p-4 rounded-lg group transition-all">
+                                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 shrink-0">
+                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-lg">open_in_new</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-700 group-hover:text-primary truncate transition-colors">{link.site}</span>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* Episodios Section */}
             <section className="py-12 bg-white border-t border-gray-100 min-h-[400px]">
                 <div className="max-w-[1600px] mx-auto px-8">
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2 mb-8">
-                        <span className="w-1 h-6 bg-primary block rounded-full"></span>
-                        Episodios
-                    </h2>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {Array.from({ length: anime.episodes || 12 }).map((_, i) => (
-                            <div
-                                key={i}
-                                onClick={() => navigate(`/anime/${id}/episode/${i + 1}`)}
-                                className="group cursor-pointer bg-white rounded-md overflow-hidden border border-gray-200 hover:shadow-xl hover:border-primary transition-all flex flex-col"
+                    <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                            <span className="w-1 h-6 bg-primary block rounded-full"></span>
+                            Episodios
+                            <span className="text-sm font-normal text-gray-500 ml-2">
+                                ({totalEpisodes} episodios{anime.status === 'RELEASING' ? ' • En emisión' : ''})
+                            </span>
+                        </h2>
+                        {localStorage.getItem('token') && watchedEps.size < totalEpisodes && (
+                            <button
+                                onClick={async () => {
+                                    const token = localStorage.getItem('token');
+                                    if (!token) return;
+                                    const unread = Array.from({ length: totalEpisodes }, (_, i) => i + 1).filter(n => !watchedEps.has(n));
+                                    let earned = 0;
+                                    for (const n of unread) {
+                                        try {
+                                            const res = await axios.post(
+                                                `${API}/anime/${id}/episodes/${n}/watched`,
+                                                {},
+                                                { headers: { Authorization: `Bearer ${token}` } }
+                                            );
+                                            earned += res.data.points_earned || 0;
+                                            setWatchedEps(prev => new Set([...prev, n]));
+                                        } catch { /* continue */ }
+                                    }
+                                    toast.success(`+${earned} XP — ¡Anime completado!`);
+                                }}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors shadow-sm"
                             >
-                                <div className="relative aspect-video bg-gray-200 overflow-hidden">
-                                    <img src={bannerImage || coverImage} alt={`Episode ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
-                                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">24:00</div>
+                                <span className="material-symbols-outlined text-[18px]">done_all</span>
+                                Marcar todos como vistos
+                            </button>
+                        )}
+                        {watchedEps.size === totalEpisodes && totalEpisodes > 0 && (
+                            <span className="flex items-center gap-1.5 text-green-600 text-sm font-bold">
+                                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                Completado
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        {Array.from({ length: Math.min(totalEpisodes, epsToShow) }).map((_, i) => {
+                            const epN = i + 1;
+                            const watched = watchedEps.has(epN);
+                            return (
+                            <div key={i} onClick={() => navigate(`/anime/${id}/episode/${epN}`)}
+                                 className={`group cursor-pointer bg-white rounded-md overflow-hidden border transition-all flex flex-col ${watched ? 'border-green-300 hover:shadow-lg hover:border-green-400' : 'border-gray-200 hover:shadow-lg hover:border-primary'}`}>
+                                <div className="relative aspect-video bg-gray-800 overflow-hidden">
+                                    <img src={bannerImage || coverImage} alt={`Ep ${epN}`}
+                                         className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${watched ? 'opacity-50 group-hover:opacity-80' : 'opacity-70 group-hover:opacity-100'}`} />
+                                    <div className="absolute top-1.5 left-1.5 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                        EP {epN}
+                                    </div>
+                                    {watched && (
+                                        <div className="absolute top-1.5 right-1.5 bg-green-500 text-white rounded-full p-0.5">
+                                            <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
+                                        </div>
+                                    )}
                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="bg-primary text-white rounded-full p-2 shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
-                                            <span className="material-icons">play_arrow</span>
+                                        <div className="bg-primary text-white rounded-full p-2 shadow-lg">
+                                            <span className="material-icons text-lg">play_arrow</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="p-4">
-                                    <h3 className="font-bold text-gray-800 text-sm mb-1 group-hover:text-primary transition-colors">Episodio {i + 1}</h3>
-                                    <p className="text-xs text-gray-500 line-clamp-2">Emitido recientemente. Acompaña al protagonista en esta nueva aventura llena de acción y secretos.</p>
+                                <div className="p-2.5">
+                                    <h3 className={`font-bold text-xs transition-colors ${watched ? 'text-green-600 group-hover:text-green-700' : 'text-gray-800 group-hover:text-primary'}`}>Episodio {epN}</h3>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
+
+                        {/* Próximamente card */}
+                        {anime.nextAiringEpisode && (
+                            <div className="bg-gray-100 rounded-md overflow-hidden border-2 border-dashed border-gray-300 flex flex-col opacity-70 cursor-default">
+                                <div className="relative aspect-video bg-gray-200 overflow-hidden flex items-center justify-center">
+                                    <div className="text-center">
+                                        <span className="material-symbols-outlined text-gray-400 text-4xl">schedule</span>
+                                    </div>
+                                    <div className="absolute top-1.5 left-1.5 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                        EP {anime.nextAiringEpisode.episode}
+                                    </div>
+                                </div>
+                                <div className="p-2.5 text-center">
+                                    <h3 className="font-bold text-gray-500 text-xs uppercase">Próximamente</h3>
+                                    <p className="text-[10px] text-gray-400 mt-0.5">
+                                        {new Date(anime.nextAiringEpisode.airingAt * 1000).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {epsToShow < totalEpisodes && (
+                        <div className="mt-8 flex justify-center">
+                            <button onClick={() => setEpsToShow(prev => Math.min(prev + 24, totalEpisodes))}
+                                className="bg-primary hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-md transition-all flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[20px]">expand_more</span>
+                                Cargar más episodios ({Math.min(epsToShow + 24, totalEpisodes)} de {totalEpisodes})
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* Cápsulas del Tiempo Section */}
+            <section className="py-12 bg-gray-50 border-t border-gray-100 min-h-[300px]">
+                <div className="max-w-[1600px] mx-auto px-8">
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2 mb-8">
+                        <span className="w-1 h-6 bg-primary block rounded-full"></span>
+                        Cápsulas del Tiempo ⏳
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Crear Cápsula */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 h-fit">
+                            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">add_box</span>
+                                Enterrar Nueva Cápsula
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-4">Escribe tus teorías iniciales. Permanecerán bloqueadas hasta que alcances el episodio objetivo.</p>
+                            
+                            <textarea 
+                                className="w-full bg-gray-50 border border-gray-200 rounded p-3 text-sm focus:ring-2 focus:ring-primary outline-none mb-3 resize-none"
+                                rows="3"
+                                placeholder="Yo creo que el villano es..."
+                                value={newCapsuleText}
+                                onChange={(e) => setNewCapsuleText(e.target.value)}
+                            ></textarea>
+                            
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <label className="text-sm font-bold text-gray-600">Abrir en Ep:</label>
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max={anime.episodes || 100} 
+                                        className="w-16 p-1 border border-gray-200 rounded text-center"
+                                        value={unlockEpisode}
+                                        onChange={(e) => setUnlockEpisode(e.target.value)}
+                                    />
+                                </div>
+                                <button 
+                                    onClick={handleCreateCapsule}
+                                    className="bg-primary hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-sm text-sm uppercase transition-colors"
+                                >
+                                    Enterrar
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Mis Cápsulas */}
+                        <div className="lg:col-span-2">
+                            {capsules.length === 0 ? (
+                                <div className="bg-white border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
+                                    No tienes cápsulas enterradas para este anime.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {capsules.map((cap, i) => (
+                                        <div key={i} className={`p-5 rounded-lg border relative overflow-hidden ${cap.locked ? 'bg-gray-100 border-gray-200' : 'bg-white border-green-200 shadow-sm'}`}>
+                                            <div className="flex justify-between items-center mb-3">
+                                                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Cápsula #{i+1}</span>
+                                                <span className={`text-xs font-bold px-2 py-1 rounded ${cap.locked ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-700'}`}>
+                                                    {cap.locked ? `Bloqueada hasta Ep ${cap.unlock_at}` : 'Desbloqueada'}
+                                                </span>
+                                            </div>
+                                            
+                                            {cap.locked ? (
+                                                <div className="flex flex-col items-center justify-center py-4 opacity-50 select-none">
+                                                    <span className="material-symbols-outlined text-4xl mb-2 text-gray-400">lock</span>
+                                                    <div className="h-2 w-3/4 bg-gray-300 rounded-full mb-2"></div>
+                                                    <div className="h-2 w-1/2 bg-gray-300 rounded-full"></div>
+                                                </div>
+                                            ) : (
+                                                <p className="text-gray-800 text-sm font-medium">"{cap.content}"</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </section>
@@ -125,3 +543,4 @@ const AnimeDetails = ({ user }) => {
 };
 
 export default AnimeDetails;
+import { API } from '../utils/api.js';

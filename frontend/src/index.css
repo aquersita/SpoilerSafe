@@ -11,7 +11,57 @@
 
 body {
     font-family: 'Lato', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+html.dark body {
+    background-color: #111827;
+    color: #e5e7eb;
+}
+
+/* --- Backgrounds --- */
+html.dark .bg-white          { background-color: #1f2937 !important; }
+html.dark .bg-gray-50        { background-color: #111827 !important; }
+html.dark .bg-gray-100       { background-color: #1f2937 !important; }
+html.dark .bg-slate-50       { background-color: #1e293b !important; }
+html.dark .bg-slate-100      { background-color: #1e293b !important; }
+html.dark .bg-slate-200      { background-color: #334155 !important; }
+html.dark .bg-background-light { background-color: #111827 !important; }
+html.dark .bg-orange-50      { background-color: rgba(251,146,60,0.1) !important; }
+html.dark .from-orange-100   { --tw-gradient-from: rgba(251,146,60,0.15) !important; }
+html.dark .to-orange-50      { --tw-gradient-to:   rgba(251,146,60,0.05) !important; }
+
+/* --- Text (gray palette) --- */
+html.dark .text-gray-900     { color: #f3f4f6 !important; }
+html.dark .text-gray-800     { color: #e5e7eb !important; }
+html.dark .text-gray-700     { color: #d1d5db !important; }
+html.dark .text-gray-600     { color: #9ca3af !important; }
+html.dark .text-gray-500     { color: #9ca3af !important; }
+
+/* --- Text (slate palette) --- */
+html.dark .text-slate-900    { color: #f1f5f9 !important; }
+html.dark .text-slate-800    { color: #e2e8f0 !important; }
+html.dark .text-slate-700    { color: #cbd5e1 !important; }
+html.dark .text-slate-600    { color: #94a3b8 !important; }
+html.dark .text-slate-500    { color: #94a3b8 !important; }
+html.dark .text-slate-400    { color: #94a3b8 !important; }
+
+/* --- Text (custom palette) --- */
+html.dark .text-text-main    { color: #f3f4f6 !important; }
+html.dark .text-text-secondary { color: #9ca3af !important; }
+html.dark .text-text-muted   { color: #6b7280 !important; }
+
+/* --- Text (orange on dark) --- */
+html.dark .text-orange-800   { color: #fdba74 !important; }
+
+/* --- Borders --- */
+html.dark .border-gray-100   { border-color: #374151 !important; }
+html.dark .border-gray-200   { border-color: #374151 !important; }
+html.dark .border-gray-300   { border-color: #4b5563 !important; }
+html.dark .border-slate-100  { border-color: #334155 !important; }
+html.dark .border-slate-200  { border-color: #334155 !important; }
+html.dark .border-slate-300  { border-color: #475569 !important; }
+html.dark .border-orange-200 { border-color: rgba(251,146,60,0.3) !important; }
 
 .hide-scrollbar::-webkit-scrollbar {
     display: none;

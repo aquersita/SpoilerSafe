@@ -1,7 +1,6 @@
 fastapi
 uvicorn
-sqlalchemy
-mysql-connector-python
+firebase-admin
 python-jose[cryptography]
 passlib[bcrypt]
 requests

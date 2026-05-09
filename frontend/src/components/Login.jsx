@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { API } from '../utils/api.js';
 
 const Login = ({ onLogin }) => {
+    const navigate = useNavigate();
     const [mode, setMode] = useState('login'); // 'login' | 'register'
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [loading, setLoading] = useState(false);
@@ -19,7 +22,7 @@ const Login = ({ onLogin }) => {
 
         try {
             if (mode === 'register') {
-                await axios.post('http://localhost:8000/register', { username, password });
+                await axios.post(`${API}/register`, { username, password });
                 // If successful, switch to login or auto-login
                 alert('Cuenta creada exitosamente. Por favor inicia sesión.');
                 setMode('login');
@@ -30,7 +33,7 @@ const Login = ({ onLogin }) => {
                 params.append('username', username);
                 params.append('password', password);
 
-                const res = await axios.post('http://localhost:8000/token', params, {
+                const res = await axios.post(`${API}/token`, params, {
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                 });
 
@@ -40,7 +43,11 @@ const Login = ({ onLogin }) => {
             }
         } catch (err) {
             console.error(err);
-            setError('Error en la autenticación. Verifica tus datos.');
+            if (err.response && err.response.data && err.response.data.detail) {
+                setError(err.response.data.detail);
+            } else {
+                setError('Error en la autenticación. Verifica tus datos.');
+            }
             setLoading(false);
         }
     };
@@ -53,7 +60,7 @@ const Login = ({ onLogin }) => {
 
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:8000/integrations/crunchyroll/sync', { email, password });
+            const res = await axios.post(`${API}/integrations/crunchyroll/sync`, { email, password });
             localStorage.setItem('token', res.data.access_token);
             onLogin({ email: email });
         } catch (err) {
@@ -67,7 +74,14 @@ const Login = ({ onLogin }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white w-full max-w-md p-8 rounded shadow-2xl border border-gray-200 relative">
-                <div className="text-center mb-8">
+                <button 
+                    onClick={() => navigate('/')} 
+                    className="absolute top-4 left-4 text-gray-400 hover:text-primary transition-colors flex items-center gap-1 text-sm font-bold"
+                >
+                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                    Volver
+                </button>
+                <div className="text-center mb-8 mt-4">
                     <h2 className="text-2xl font-bold text-text-main mb-2">{title}</h2>
                     <p className="text-text-muted text-sm">Accede a SpoilerSafe para comentar sin miedo.</p>
                 </div>

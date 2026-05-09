@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: spoilersafe-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main_firebase:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
+      - key: ALLOWED_ORIGINS
+        value: https://spoilersafe.netlify.app,http://localhost:5173
+      - key: FIREBASE_CREDENTIALS_PATH
+        value: /etc/secrets/firebase-credentials.json
+    secretFiles:
+      - name: firebase-credentials.json
+        value: FIREBASE_CREDENTIALS_JSON

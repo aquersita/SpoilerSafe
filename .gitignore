@@ -1,0 +1,49 @@
+# Credenciales Firebase — NUNCA subir al repo
+firebase-credentials.json
+spoilersafe-365f3-*.json
+*.json.key
+
+# Variables de entorno
+.env
+.env.local
+.env.production.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Base de datos local (ya no se usa con Firebase)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+backend.log
+
+# Uploads locales
+uploads/
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

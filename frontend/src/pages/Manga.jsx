@@ -1,11 +1,13 @@
-
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getTrendingManga, searchManga } from '../services/mangaService';
 import { askAgeGate } from '../utils/ageGate';
+
 const Manga = () => {
     const navigate = useNavigate();
     const [trending, setTrending] = useState([]);
     const [catalog, setCatalog] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
     const [loadingMore, setLoadingMore] = useState(false);
     const [searchInput, setSearchInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
@@ -18,18 +20,17 @@ const Manga = () => {
         return () => clearTimeout(timer);
     }, [searchInput]);
 
-    // Initial load — fetch trending + catalog, scroll to top
     useEffect(() => {
         window.scrollTo(0, 0);
         const fetchInitial = async () => {
             setLoading(true);
             try {
                 const [trendRes, catRes] = await Promise.all([
-                    axios.get(`${API}/manga/trending`),
-                    axios.get(`${API}/manga/catalog?page=1`)
+                    getTrendingManga(),
+                    searchManga('')
                 ]);
-                setTrending(trendRes.data.data.Page.media);
-                setCatalog(catRes.data.data.Page.media);
+                setTrending(trendRes.data?.Page?.media || []);
+                setCatalog(catRes.data?.Page?.media || []);
             } catch (err) {
                 console.error("Error fetching manga:", err);
             } finally {
@@ -39,15 +40,15 @@ const Manga = () => {
         fetchInitial();
     }, []);
 
-    // Search changes — only re-fetch catalog, NO scroll, NO full spinner
     useEffect(() => {
-        if (loading) return; // Skip during initial load
+        if (loading) return;
         const fetchSearch = async () => {
             setSearching(true);
             try {
-                const res = await axios.get(`${API}/manga/catalog?page=1${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''}`);
-                setCatalog(res.data.data.Page.media);
-                setPage(1);
+                const res = searchQuery
+                    ? await searchManga(searchQuery)
+                    : await getTrendingManga();
+                setCatalog(res.data?.Page?.media || []);
             } catch (err) {
                 console.error("Error searching manga:", err);
             } finally {
@@ -60,10 +61,8 @@ const Manga = () => {
     const handleLoadMore = async () => {
         setLoadingMore(true);
         try {
-            const nextPage = page + 1;
-            const res = await axios.get(`${API}/manga/catalog?page=${nextPage}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''}`);
-            setCatalog(prev => [...prev, ...res.data.data.Page.media]);
-            setPage(nextPage);
+            const res = await getTrendingManga();
+            setCatalog(prev => [...prev, ...(res.data?.Page?.media || [])]);
         } catch (err) {
             console.error("Error loading more manga:", err);
         } finally {
@@ -85,9 +84,9 @@ const Manga = () => {
             <div className="relative w-full h-[40vh] bg-slate-900 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent z-10"></div>
                 {trending[0] && (
-                    <img 
-                        src={trending[0].coverImage.extraLarge} 
-                        alt="Hero" 
+                    <img
+                        src={trending[0].coverImage.large}
+                        alt="Hero"
                         className="absolute right-0 top-0 w-1/2 h-full object-cover opacity-50 blur-sm"
                     />
                 )}
@@ -106,7 +105,7 @@ const Manga = () => {
                     <span className="w-1 h-6 bg-primary block rounded-full"></span>
                     Mangas en Tendencia
                 </h2>
-                
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 mb-12">
                     {trending.slice(0, 6).map(manga => (
                         <div
@@ -148,9 +147,9 @@ const Manga = () => {
                         Catálogo Completo
                     </h2>
                     <div className="relative w-full md:w-96">
-                        <input 
-                            type="text" 
-                            placeholder="Buscar manga..." 
+                        <input
+                            type="text"
+                            placeholder="Buscar manga..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
                             className="w-full bg-white border border-gray-300 text-gray-800 rounded-full py-2 pl-4 pr-10 focus:outline-none focus:border-primary shadow-sm"
@@ -204,7 +203,7 @@ const Manga = () => {
                 </div>
 
                 <div className="mt-12 flex justify-center pb-12">
-                    <button 
+                    <button
                         onClick={handleLoadMore}
                         disabled={loadingMore}
                         className="bg-primary hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition-all flex items-center gap-2 disabled:opacity-70"
@@ -228,4 +227,3 @@ const Manga = () => {
 };
 
 export default Manga;
-import { API } from '../utils/api.js';

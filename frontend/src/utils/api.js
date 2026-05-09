@@ -1,2 +1,3 @@
-export const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-export const WS = API.replace(/^http/, 'ws');
+// Legacy — no longer used. Firebase SDK replaces all API calls.
+export const API = '';
+export const WS = '';

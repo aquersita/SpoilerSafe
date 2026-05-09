@@ -1,5 +1,10 @@
-
-import axios from 'axios';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { getUserProfileByUsername, equipReward } from '../services/userService';
+import { updateUserProfile } from '../services/userService';
+import { getFavorites } from '../services/favoritesService';
+import { getWatchlist } from '../services/watchlistService';
 
 /* ─── utils ────────────────────────────────────────────────────────────────── */
 const cls = (...xs) => xs.filter(Boolean).join(' ');
@@ -432,175 +437,6 @@ const FeaturedDashboardSection = ({ favorites = [], stats, profile }) => (
   </Card>
 );
 
-/* ─── Recommendations ───────────────────────────────────────────────────────── */
-const RecommendationsSection = ({ profile, token }) => {
-  const [recs, setRecs] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ media_id: '', media_type: 'anime', title: '', cover_image: '', reason: '' });
-  const [search, setSearch] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
-  const canRecommend = profile?.level >= 5;
-
-  const fetchRecs = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API}/recommendations`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      setRecs(res.data);
-    } catch { /* ignore */ }
-  }, [token]);
-
-  useEffect(() => { fetchRecs(); }, [fetchRecs]);
-
-  const searchMedia = async (q) => {
-    if (!q || q.length < 2) { setSearchResults([]); return; }
-    try {
-      const endpoint = form.media_type === 'anime'
-        ? `${API}/anime/search?query=${encodeURIComponent(q)}`
-        : `${API}/manga/catalog?search=${encodeURIComponent(q)}`;
-      const res = await axios.get(endpoint);
-      setSearchResults((res.data?.data?.Page?.media || []).slice(0, 5));
-    } catch { setSearchResults([]); }
-  };
-
-  const handleSubmit = async () => {
-    if (!form.title || form.reason.length < 20) return;
-    setSubmitting(true);
-    try {
-      await axios.post(`${API}/recommendations`, form, { headers: { Authorization: `Bearer ${token}` } });
-      setShowForm(false);
-      setForm({ media_id: '', media_type: 'anime', title: '', cover_image: '', reason: '' });
-      fetchRecs();
-    } catch (err) { alert(err.response?.data?.detail || 'Error al publicar'); }
-    finally { setSubmitting(false); }
-  };
-
-  const toggleLike = async (rec) => {
-    if (!token) return;
-    try {
-      await axios.post(`${API}/recommendations/${rec.id}/like`, {}, { headers: { Authorization: `Bearer ${token}` } });
-      fetchRecs();
-    } catch { /* ignore */ }
-  };
-
-  return (
-    <Card>
-      <SectionHeader
-        icon={<Svg path={ICON.sparkle} className="size-3.5" />}
-        title="Recomendaciones"
-        action={canRecommend && token && (
-          <button onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 hover:text-orange-700">
-            <Svg path={ICON.plus} className="size-3.5" />Nueva
-          </button>
-        )}
-      />
-
-      {!canRecommend && (
-        <div className="relative overflow-hidden rounded-xl border border-orange-200/60 bg-gradient-to-br from-orange-50 via-amber-50/60 to-white p-5 mb-4">
-          <div className="flex items-start gap-4">
-            <span className="grid place-items-center size-12 rounded-xl bg-white ring-1 ring-orange-200 text-orange-600 shrink-0">
-              <Svg path={ICON.lock} className="size-5" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-sm font-bold text-slate-900">Recomendaciones desbloqueadas en Nivel 5</h4>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider">
-                  <Svg path={ICON.bolt} filled className="size-3" />Nivel {profile?.level ?? 1}/5
-                </span>
-              </div>
-              <p className="mt-1.5 text-[13px] text-slate-600 leading-relaxed">
-                Cuando llegues a nivel 5 podrás recomendar animes y ganar <b className="text-orange-700">+10 puntos</b> por cada recomendación.
-              </p>
-              <div className="mt-3 h-1.5 rounded-full bg-white ring-1 ring-orange-100 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400"
-                  style={{ width: `${((profile?.level ?? 1) / 5) * 100}%` }} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showForm && (
-        <div className="bg-slate-50 rounded-xl p-5 mb-5 border border-slate-200">
-          <h4 className="font-bold text-slate-900 mb-4">Nueva Recomendación</h4>
-          <div className="flex gap-2 mb-3">
-            {['anime', 'manga'].map(t => (
-              <button key={t} onClick={() => setForm(f => ({ ...f, media_type: t }))}
-                className={cls('px-4 py-1.5 text-sm font-semibold rounded-lg capitalize transition',
-                  form.media_type === t ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600')}>
-                {t}
-              </button>
-            ))}
-          </div>
-          <div className="relative mb-3">
-            <input value={search}
-              onChange={e => { setSearch(e.target.value); searchMedia(e.target.value); }}
-              placeholder={`Buscar ${form.media_type}...`}
-              className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400" />
-            {searchResults.length > 0 && (
-              <div className="absolute z-20 left-0 right-0 bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
-                {searchResults.map(m => (
-                  <button key={m.id} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2"
-                    onClick={() => {
-                      setForm(f => ({ ...f, media_id: m.id, title: m.title.romaji || m.title.english || '', cover_image: m.coverImage?.large || '' }));
-                      setSearch(m.title.romaji || m.title.english || '');
-                      setSearchResults([]);
-                    }}>
-                    {m.coverImage?.large && <img src={m.coverImage.large} alt="" className="w-6 h-8 object-cover rounded" />}
-                    {m.title.romaji || m.title.english}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <textarea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
-            placeholder="¿Por qué lo recomiendas? (mín. 20 caracteres)" rows={3}
-            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400 resize-none mb-3" />
-          <div className="flex gap-2 justify-end">
-            <button onClick={() => setShowForm(false)}
-              className="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">
-              Cancelar
-            </button>
-            <button onClick={handleSubmit} disabled={submitting || !form.title || form.reason.length < 20}
-              className="px-6 py-2 text-sm font-semibold text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50">
-              {submitting ? 'Publicando…' : 'Publicar (+10 pts)'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {recs.length === 0
-        ? <EmptyState icon={ICON.sparkle} title="Aún no hay recomendaciones" hint="¡Sé el primero en compartir un anime con la comunidad!" />
-        : (
-          <div className="space-y-4">
-            {recs.slice(0, 5).map(rec => (
-              <div key={rec.id} className="flex gap-3 items-start">
-                {rec.cover_image && <img src={rec.cover_image} alt={rec.title} className="w-12 h-16 object-cover rounded-lg shrink-0 border border-slate-200" />}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-bold text-sm text-slate-900 truncate">{rec.title}</p>
-                      <p className="text-xs text-slate-400">
-                        por <span className="font-bold text-orange-600">{rec.author}</span>
-                        {' · '}{rec.created_at}{' · '}<span className="capitalize">{rec.media_type}</span>
-                      </p>
-                    </div>
-                    <button onClick={() => toggleLike(rec)}
-                      className={cls('flex items-center gap-1 text-xs font-bold shrink-0 transition-colors',
-                        rec.is_liked ? 'text-orange-500' : 'text-slate-400 hover:text-orange-500')}>
-                      <Svg path={ICON.heart} filled={rec.is_liked} className="size-3.5" />{rec.likes}
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">{rec.reason}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-    </Card>
-  );
-};
-
 /* ─── Right column ──────────────────────────────────────────────────────────── */
 const RankCard = ({ profile }) => {
   const xp = xpPct(profile);
@@ -660,127 +496,6 @@ const RankCard = ({ profile }) => {
         </div>
       </div>
     </section>
-  );
-};
-
-const ACH_CATS = [
-  { id: 'all', label: 'Todos' }, { id: 'anime', label: 'Anime' }, { id: 'manga', label: 'Manga' },
-  { id: 'social', label: 'Social' }, { id: 'gaming', label: 'Gaming' },
-];
-
-const AchievementsCard = ({ achievements = [] }) => {
-  const [cat, setCat] = useState('all');
-  const filtered = useMemo(() =>
-    cat === 'all' ? achievements : achievements.filter(a => (a.category || '').toLowerCase() === cat),
-    [cat, achievements]);
-  const earned = achievements.filter(a => a.is_earned).length;
-  return (
-    <Card padded={false}>
-      <div className="p-5 pb-3">
-        <SectionHeader icon={<Svg path={ICON.trophy} className="size-3.5" />} title="Logros"
-          hint={`${earned}/${achievements.length}`} className="mb-3" />
-        <div className="flex items-center gap-1 overflow-x-auto -mx-1 px-1 [scrollbar-width:none]">
-          {ACH_CATS.map(c => (
-            <button key={c.id} onClick={() => setCat(c.id)}
-              className={cls('shrink-0 px-2.5 py-1.5 rounded-lg text-[11.5px] font-semibold transition',
-                cat === c.id ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}>
-              {c.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <ul className="px-3 pb-4 max-h-[360px] overflow-y-auto space-y-2 [scrollbar-width:thin]">
-        {filtered.map(a => {
-          const pct = a.requirement ? Math.min(100, Math.round((a.current_progress / a.requirement) * 100)) : (a.is_earned ? 100 : 0);
-          return (
-            <li key={a.key || a.name}
-              className={cls('p-3 rounded-xl border transition', a.is_earned ? 'bg-orange-50/40 border-orange-100' : 'bg-white border-slate-200/70 hover:border-slate-300')}>
-              <div className="flex items-start gap-3">
-                <span className={cls('grid place-items-center size-9 rounded-lg text-base shrink-0 ring-1',
-                  a.is_earned ? 'bg-orange-100 ring-orange-200 text-orange-700' : 'bg-slate-100 ring-slate-200 text-slate-500')}>
-                  {a.icon
-                    ? <span className="material-symbols-outlined text-sm"
-                        style={{ fontVariationSettings: a.is_earned ? "'FILL' 1" : "'FILL' 0" }}>{a.icon}</span>
-                    : <Svg path={ICON.trophy} className="size-4" />}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h5 className={cls('text-[13px] font-bold tracking-tight', a.is_earned ? 'text-slate-900' : 'text-slate-700')}>{a.name}</h5>
-                    {a.bonus_points != null && <span className="text-[10px] font-bold text-orange-600 tabular-nums">+{a.bonus_points}xp</span>}
-                    {a.is_earned && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700"><Svg path={ICON.check} className="size-3" />Conseguido</span>}
-                  </div>
-                  <p className="mt-0.5 text-[11.5px] text-slate-500 line-clamp-2 leading-snug">{a.description}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="flex-1 h-1.5 rounded-full bg-slate-200/70 overflow-hidden">
-                      <div className={cls('h-full rounded-full', a.is_earned ? 'bg-gradient-to-r from-orange-500 to-amber-400' : 'bg-slate-400/70')}
-                        style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="text-[10.5px] font-semibold text-slate-400 tabular-nums shrink-0">{a.current_progress ?? 0}/{a.requirement ?? '—'}</span>
-                  </div>
-                </div>
-              </div>
-            </li>
-          );
-        })}
-        {filtered.length === 0 && <li className="text-center text-[12px] text-slate-500 py-8">Sin logros en esta categoría.</li>}
-      </ul>
-    </Card>
-  );
-};
-
-const RewardsCard = ({ rewards = [], onEquip }) => {
-  const [tab, setTab] = useState('frame');
-  const filtered = rewards.filter(r => r.type === tab);
-  return (
-    <Card padded={false}>
-      <div className="p-5 pb-3">
-        <SectionHeader icon={<Svg path={ICON.sparkle} className="size-3.5" />} title="Recompensas" className="mb-3" />
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100/70">
-          {[['frame','Marcos'],['emoji','Emojis'],['banner','Banners']].map(([id, label]) => (
-            <button key={id} onClick={() => setTab(id)}
-              className={cls('py-1.5 rounded-lg text-[12px] font-semibold transition',
-                tab === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700')}>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="px-3 pb-4 max-h-[320px] overflow-y-auto space-y-2 [scrollbar-width:thin]">
-        {filtered.map(r => {
-          const locked = !r.is_unlocked;
-          return (
-            <button key={r.key || r.name} onClick={() => !locked && onEquip?.(r)}
-              className={cls('group relative text-left p-3 rounded-xl border transition w-full',
-                r.is_equipped ? 'border-orange-300 ring-1 ring-orange-200 bg-orange-50/40' : 'border-slate-200 hover:border-slate-300 bg-white',
-                locked ? 'opacity-60 cursor-default' : 'cursor-pointer')}>
-              <div className="flex items-center gap-3">
-                {r.type === 'emoji'
-                  ? r.image
-                    ? <img src={r.image} alt={r.name} className="size-12 rounded-lg object-contain bg-slate-50 ring-1 ring-slate-200 p-1" />
-                    : <span className="grid place-items-center size-12 rounded-lg bg-slate-50 text-2xl ring-1 ring-slate-200">{r.emoji || '⭐'}</span>
-                  : r.type === 'banner' && r.image
-                    ? <img src={r.image} alt={r.name} className="size-12 rounded-lg object-cover ring-1 ring-slate-200" />
-                    : <span className="size-12 rounded-lg ring-1 ring-slate-200 block"
-                        style={{ background: r.preview_color || gradFor(r.name || '') }} />
-                }
-                <div className="flex-1 min-w-0">
-                  <div className="text-[12.5px] font-bold text-slate-900 truncate">{r.name}</div>
-                  <div className="mt-0.5 text-[11px] text-slate-500">
-                    {locked
-                      ? (r.unlock_type === 'level' ? `Nivel ${r.unlock_value}` : `${fmt(r.unlock_value)} pts`)
-                      : r.is_equipped
-                        ? <span className="text-orange-700 font-bold">Equipado</span>
-                        : 'Toca para equipar'}
-                  </div>
-                </div>
-                {locked && <Svg path={ICON.lock} className="size-4 text-slate-400" />}
-              </div>
-            </button>
-          );
-        })}
-        {filtered.length === 0 && <p className="text-center text-[12px] text-slate-500 py-8">Sin recompensas.</p>}
-      </div>
-    </Card>
   );
 };
 
@@ -861,61 +576,48 @@ const EditModal = ({ data, onChange, onSave, onClose, saving }) => (
 const UserProfile = () => {
   const navigate = useNavigate();
   const { username } = useParams();
-  const token = localStorage.getItem('token');
+  const { profile: authProfile, setProfile: setAuthProfile } = useAuth();
 
-  const [profile, setProfile]       = useState(null);
+  const [profile, setProfile]           = useState(null);
   const [rawFavorites, setRawFavorites] = useState([]);
-  const [achievements, setAchievements] = useState([]);
-  const [rewards, setRewards]       = useState([]);
-  const [stats, setStats]           = useState(null);
   const [rawWatchlist, setRawWatchlist] = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [isEditing, setIsEditing]   = useState(false);
-  const [editData, setEditData]     = useState({ avatar_url: '', banner_url: '', bio: '', location: '' });
-  const [isSaving, setIsSaving]     = useState(false);
-  const [myUsername, setMyUsername] = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [isEditing, setIsEditing]       = useState(false);
+  const [editData, setEditData]         = useState({ avatar_url: '', banner_url: '', bio: '', location: '' });
+  const [isSaving, setIsSaving]         = useState(false);
 
-  useEffect(() => {
-    if (token) {
-      axios.get(`${API}/users/me/profile`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => setMyUsername(r.data.username)).catch(() => {});
-    }
-  }, [token]);
-
-  const isOwner = !username || (myUsername && profile?.username === myUsername);
+  const isOwner = !username || (authProfile && profile?.username === authProfile?.username);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     const fetchData = async () => {
       setLoading(true);
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       try {
-        const endpoint = username ? `${API}/users/${username}` : `${API}/users/me/profile`;
-        const [userRes, favsRes, achRes, rewardsRes] = await Promise.allSettled([
-          axios.get(endpoint, { headers }),
-          token ? axios.get(`${API}/favorites`, { headers }) : Promise.resolve({ data: [] }),
-          axios.get(`${API}/achievements`, { headers }),
-          axios.get(`${API}/rewards`, { headers }),
-        ]);
-        if (userRes.status === 'fulfilled') {
-          setProfile(userRes.value.data);
-          setEditData({
-            avatar_url: userRes.value.data.avatar_url || '',
-            banner_url: userRes.value.data.banner_url || '',
-            bio: userRes.value.data.bio || '',
-            location: userRes.value.data.location || '',
-          });
+        let profileData = null;
+        if (username) {
+          profileData = await getUserProfileByUsername(username);
+        } else if (authProfile) {
+          profileData = authProfile;
         }
-        if (favsRes.status === 'fulfilled')
-          setRawFavorites(favsRes.value.data);
-        if (achRes.status === 'fulfilled')
-          setAchievements(achRes.value.data);
-        if (rewardsRes.status === 'fulfilled')
-          setRewards(rewardsRes.value.data);
 
-        if (token && !username) {
-          axios.get(`${API}/users/me/stats`, { headers }).then(r => setStats(r.data)).catch(() => {});
-          axios.get(`${API}/watchlist`, { headers }).then(r => setRawWatchlist(r.data)).catch(() => {});
+        if (profileData) {
+          setProfile(profileData);
+          setEditData({
+            avatar_url: profileData.avatar_url || '',
+            banner_url: profileData.banner_url || '',
+            bio: profileData.bio || '',
+            location: profileData.location || '',
+          });
+
+          const uid = profileData.uid;
+          if (uid) {
+            const [favsData, wlData] = await Promise.allSettled([
+              getFavorites(uid),
+              getWatchlist(uid),
+            ]);
+            if (favsData.status === 'fulfilled') setRawFavorites(favsData.value);
+            if (wlData.status === 'fulfilled') setRawWatchlist(wlData.value);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -924,15 +626,15 @@ const UserProfile = () => {
       }
     };
     fetchData();
-  }, [username, token]);
+  }, [username, authProfile?.uid]);
 
   /* ── data mapping ── */
   const mapAnime = (a) => ({
-    id: a.id,
+    id: a.id || a.media_id,
     title: a.title?.romaji || a.title?.english || a.title || '',
-    coverImage: a.coverImage?.extraLarge || a.coverImage?.large || a.coverImage,
-    bannerImage: a.bannerImage,
-    averageScore: a.averageScore ? (a.averageScore / 10).toFixed(1) : null,
+    coverImage: a.coverImage?.extraLarge || a.coverImage?.large || a.coverImage || a.cover_image,
+    bannerImage: a.bannerImage || a.banner_image,
+    averageScore: a.averageScore ? (a.averageScore / 10).toFixed(1) : (a.average_score ? (a.average_score / 10).toFixed(1) : null),
     genres: a.genres || [],
   });
 
@@ -945,62 +647,28 @@ const UserProfile = () => {
     return Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
   }, [favorites]);
 
-  const mappedProfile = useMemo(() => {
-    if (!profile) return null;
-    const frameReward = rewards.find(r => r.key === profile.active_frame && r.type === 'frame');
-    const emojiReward = rewards.find(r => r.key === profile.active_emoji && r.type === 'emoji');
-    return {
-      ...profile,
-      active_frame: frameReward ? { preview_color: frameReward.preview_color } : null,
-      active_emoji: emojiReward ? { emoji: emojiReward.emoji, image: emojiReward.image } : null,
-    };
-  }, [profile, rewards]);
-
   /* ── handlers ── */
   const handleSave = async () => {
-    if (!token) return;
+    if (!authProfile?.uid) return;
     setIsSaving(true);
     try {
-      await axios.put(`${API}/users/me/profile`, editData, { headers: { Authorization: `Bearer ${token}` } });
+      await updateUserProfile(authProfile.uid, editData);
       setProfile(prev => ({ ...prev, ...editData }));
+      setAuthProfile(prev => ({ ...prev, ...editData }));
       setIsEditing(false);
     } catch { alert('Error al guardar.'); }
     finally { setIsSaving(false); }
   };
 
   const handleEquip = async (reward) => {
-    if (!token) return;
+    if (!authProfile?.uid) return;
     try {
-      const body = reward.type === 'frame'
-        ? { active_frame: reward.key }
-        : reward.type === 'banner'
-          ? { active_banner: reward.key }
-          : { active_emoji: reward.key };
-      await axios.put(`${API}/users/me/equip`, body, { headers: { Authorization: `Bearer ${token}` } });
-      setRewards(prev => prev.map(r => ({
-        ...r,
-        is_equipped: r.type === reward.type ? r.key === reward.key : r.is_equipped,
-      })));
-      setProfile(prev => reward.type === 'frame'
-        ? { ...prev, active_frame: reward.key }
-        : reward.type === 'banner'
-          ? { ...prev, active_banner: reward.key, banner_url: reward.image || prev.banner_url }
-          : { ...prev, active_emoji: reward.key });
+      const updates = await equipReward(authProfile.uid, reward.type, reward.key, reward.image || '');
+      setProfile(prev => ({ ...prev, ...updates }));
+      setAuthProfile(prev => ({ ...prev, ...updates }));
     } catch (err) {
-      alert(err.response?.data?.detail || 'Error al equipar');
+      alert(err.message || 'Error al equipar');
     }
-  };
-
-  const handleFollow = async () => {
-    if (!token || !profile) return;
-    try {
-      await axios.post(`${API}/users/${profile.id}/follow`, {}, { headers: { Authorization: `Bearer ${token}` } });
-      setProfile(prev => ({
-        ...prev,
-        is_following: !prev.is_following,
-        followers_count: prev.is_following ? prev.followers_count - 1 : prev.followers_count + 1,
-      }));
-    } catch (err) { console.error(err); }
   };
 
   if (loading) return (
@@ -1009,20 +677,22 @@ const UserProfile = () => {
     </div>
   );
 
-  const earned = achievements.filter(a => a.is_earned).length;
+  const achievements = [];
+  const earned = 0;
+  const stats = null;
 
   return (
     <div className="min-h-screen bg-[#f6faff] text-slate-800 antialiased">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
 
         <ProfileHeader
-          profile={mappedProfile}
+          profile={profile}
           isOwner={isOwner}
           achievementsEarned={earned}
           achievementsTotal={achievements.length}
           isFollowing={profile?.is_following}
           onEdit={() => setIsEditing(true)}
-          onFollow={handleFollow}
+          onFollow={() => {}}
           onMessage={() => navigate(`/messages/${profile?.username}`)}
         />
 
@@ -1037,18 +707,15 @@ const UserProfile = () => {
           {/* LEFT */}
           <div className="lg:col-span-8 space-y-5">
             <FavoritesSection favorites={favorites} />
-            <RecommendationsSection profile={mappedProfile} token={token} />
             <GenresSection genres={topGenres} />
-            <FeaturedDashboardSection favorites={favorites} stats={stats} profile={mappedProfile} />
+            <FeaturedDashboardSection favorites={favorites} stats={stats} profile={profile} />
             {isOwner && watchlist.length > 0 && <WatchlistSection watchlist={watchlist} />}
           </div>
 
           {/* RIGHT */}
           <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-6">
-            <RankCard profile={mappedProfile} />
-            <AchievementsCard achievements={achievements} />
-            {isOwner && <RewardsCard rewards={rewards} onEquip={handleEquip} />}
-            <StatsListCard stats={stats} profile={mappedProfile} />
+            <RankCard profile={profile} />
+            <StatsListCard stats={stats} profile={profile} />
           </aside>
         </div>
       </div>
@@ -1067,4 +734,3 @@ const UserProfile = () => {
 };
 
 export default UserProfile;
-import { API } from '../utils/api.js';

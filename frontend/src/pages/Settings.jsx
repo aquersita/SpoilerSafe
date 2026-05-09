@@ -1,22 +1,25 @@
-
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { updateUserProfile } from '../services/userService';
 
-const Settings = ({ user, onUserUpdate }) => {
+const Settings = ({ user }) => {
     const navigate = useNavigate();
+    const { profile, setProfile } = useAuth();
+    const currentUser = user || profile;
+
     const [activeTab, setActiveTab] = useState('account');
-    const [bio, setBio] = useState(user?.bio || '');
-    const [location, setLocation] = useState(user?.location || '');
+    const [bio, setBio] = useState(currentUser?.bio || '');
+    const [location, setLocation] = useState(currentUser?.location || '');
     const [saving, setSaving] = useState(false);
 
     const handleSaveAccount = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) { navigate('/login'); return; }
+        if (!currentUser?.uid) { navigate('/login'); return; }
         setSaving(true);
         try {
-            const res = await axios.put(`${API}/users/me`, { bio, location }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            onUserUpdate?.(res.data);
+            await updateUserProfile(currentUser.uid, { bio, location });
+            setProfile(prev => ({ ...prev, bio, location }));
             toast.success('Cambios guardados correctamente');
         } catch {
             toast.error('Error al guardar los cambios');
@@ -37,7 +40,7 @@ const Settings = ({ user, onUserUpdate }) => {
                             <input
                                 type="text"
                                 className="bg-slate-100 border border-slate-200 text-slate-500 rounded-lg block w-full p-3 font-medium outline-none cursor-not-allowed"
-                                value={user?.username || ''}
+                                value={currentUser?.username || ''}
                                 disabled
                             />
                             <span className="text-xs text-slate-400">El nombre de usuario no se puede cambiar.</span>
@@ -73,8 +76,8 @@ const Settings = ({ user, onUserUpdate }) => {
                             <div className="flex-1">
                                 <p className="text-sm font-bold text-slate-700">Nivel de cuenta</p>
                                 <p className="text-xs text-slate-500">
-                                    {user?.is_admin ? '🛡️ Administrador' : user?.is_premium ? '⭐ Premium' : '👤 Usuario gratuito'}
-                                    {' · '}Nivel {user?.level || 1} · {user?.points || 0} XP
+                                    {currentUser?.is_admin ? '🛡️ Administrador' : currentUser?.is_premium ? '⭐ Premium' : '👤 Usuario gratuito'}
+                                    {' · '}Nivel {currentUser?.level || 1} · {currentUser?.points || 0} XP
                                 </p>
                             </div>
                         </div>
@@ -147,7 +150,7 @@ const Settings = ({ user, onUserUpdate }) => {
                         <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Tu Suscripción</h2>
 
                         <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-orange-100 to-orange-50 border border-orange-200 rounded-xl text-center">
-                            {user?.is_premium ? (
+                            {currentUser?.is_premium ? (
                                 <>
                                     <span className="material-symbols-outlined text-yellow-500 text-6xl mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
                                     <h3 className="text-2xl font-black text-slate-900 mb-2">Miembro Premium</h3>
@@ -219,4 +222,3 @@ const Settings = ({ user, onUserUpdate }) => {
 };
 
 export default Settings;
-import { API } from '../utils/api.js';

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { API } from '../utils/api.js';
+import { useAuth } from '../context/AuthContext';
+import { searchAnime } from '../services/animeService';
+import { searchUsers } from '../services/userService';
 
-const Navbar = ({ onLoginClick, onLogoClick, user }) => {
+const Navbar = ({ onLoginClick, onLogoClick }) => {
     const navigate = useNavigate();
+    const { profile: user, logout } = useAuth();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const [userResults, setUserResults] = useState([]);
@@ -39,12 +41,12 @@ const Navbar = ({ onLoginClick, onLogoClick, user }) => {
                 return;
             }
             try {
-                const [animeRes, usersRes] = await Promise.all([
-                    axios.get(`${API}/anime/search?query=${query}`),
-                    axios.get(`${API}/users/search?query=${query}`)
+                const [animeRes, usersData] = await Promise.all([
+                    searchAnime(query),
+                    searchUsers(query)
                 ]);
-                setResults(animeRes.data.data.Page.media);
-                setUserResults(usersRes.data);
+                setResults(animeRes.data?.Page?.media || []);
+                setUserResults(usersData || []);
                 setShowResults(true);
             } catch (err) {
                 console.error(err);
@@ -59,6 +61,11 @@ const Navbar = ({ onLoginClick, onLogoClick, user }) => {
         setIsMenuOpen(false);
     };
 
+    const handleLogout = async () => {
+        await logout();
+        navigate('/');
+    };
+
     return (
         <nav className="fixed top-0 w-full z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-border-light dark:border-gray-800 transition-colors duration-300 shadow-sm">
             <div className="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
@@ -68,7 +75,7 @@ const Navbar = ({ onLoginClick, onLogoClick, user }) => {
                         <span className="font-black text-3xl tracking-tighter text-gray-800 dark:text-white group-hover:text-primary transition-colors drop-shadow-sm">SAFE</span>
                     </div>
                     <div className="hidden lg:flex items-center space-x-6 text-sm font-bold text-text-secondary dark:text-gray-400">
-                        <div 
+                        <div
                             className="relative group cursor-pointer h-16 flex items-center"
                             onMouseEnter={() => setIsExploreOpen(true)}
                             onMouseLeave={() => setIsExploreOpen(false)}
@@ -79,21 +86,21 @@ const Navbar = ({ onLoginClick, onLogoClick, user }) => {
                             {/* Dropdown Menu */}
                             {isExploreOpen && (
                                 <div className="absolute top-14 left-0 w-48 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg shadow-xl py-2 z-50 overflow-hidden transform opacity-100 scale-100 transition-all duration-200 origin-top flex flex-col gap-1">
-                                    <div 
+                                    <div
                                         className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary cursor-pointer transition-colors flex items-center gap-2 dark:text-gray-300"
                                         onClick={() => navigate('/catalog')}
                                     >
                                         <span className="material-symbols-outlined text-[18px]">explore</span>
                                         Todo el Catálogo
                                     </div>
-                                    <div 
+                                    <div
                                         className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary cursor-pointer transition-colors flex items-center gap-2 dark:text-gray-300"
                                         onClick={() => navigate('/catalog?sort=SCORE_DESC')}
                                     >
                                         <span className="material-symbols-outlined text-[18px]">star</span>
                                         Mejor Valorados
                                     </div>
-                                    <div 
+                                    <div
                                         className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary cursor-pointer transition-colors flex items-center gap-2 dark:text-gray-300"
                                         onClick={() => navigate('/catalog?sort=START_DATE_DESC')}
                                     >
@@ -136,7 +143,7 @@ const Navbar = ({ onLoginClick, onLogoClick, user }) => {
                                                 </div>
                                                 {userResults.map(u => (
                                                     <div
-                                                        key={u.id}
+                                                        key={u.uid}
                                                         className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                                                         onClick={() => {
                                                             navigate(`/users/${u.username}`);
@@ -208,16 +215,31 @@ const Navbar = ({ onLoginClick, onLogoClick, user }) => {
                                 <span className="material-symbols-outlined">admin_panel_settings</span>
                             </button>
                         )}
-                        <div className="flex items-center gap-2 cursor-pointer" onClick={() => user ? navigate(`/users/${user.username}`) : onLoginClick()}>
-                            <div className="relative">
-                                <img
-                                    alt="User Avatar"
-                                    className="w-8 h-8 rounded-full border border-gray-200 object-cover bg-gray-100"
-                                    src={user?.avatar_url || "https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"}
-                                />
-                                {user && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>}
+                        {user ? (
+                            <div className="flex items-center gap-2">
+                                <div className="relative cursor-pointer" onClick={() => navigate(`/users/${user.username}`)}>
+                                    <img
+                                        alt="User Avatar"
+                                        className="w-8 h-8 rounded-full border border-gray-200 object-cover bg-gray-100"
+                                        src={user?.avatar_url || "https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"}
+                                    />
+                                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                                </div>
+                                <button onClick={handleLogout} className="text-gray-500 hover:text-red-500 transition-colors" title="Cerrar sesión">
+                                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                                </button>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={onLoginClick}>
+                                <div className="relative">
+                                    <img
+                                        alt="User Avatar"
+                                        className="w-8 h-8 rounded-full border border-gray-200 object-cover bg-gray-100"
+                                        src="https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <button
                         className="lg:hidden p-2 text-gray-500 hover:text-primary"

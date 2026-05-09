@@ -1,36 +1,37 @@
-
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { getWatchlist, removeFromWatchlist } from '../services/watchlistService';
+
 const Watchlist = ({ user }) => {
     const navigate = useNavigate();
+    const { profile } = useAuth();
+    const currentUser = user || profile;
+
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const token = localStorage.getItem('token');
-
     const fetchWatchlist = async () => {
-        if (!token) { setLoading(false); return; }
+        if (!currentUser?.uid) { setLoading(false); return; }
         try {
-            const res = await axios.get(`${API}/watchlist`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setItems(res.data);
+            const data = await getWatchlist(currentUser.uid);
+            setItems(data);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
 
-    useEffect(() => { window.scrollTo(0, 0); fetchWatchlist(); }, []);
+    useEffect(() => { window.scrollTo(0, 0); fetchWatchlist(); }, [currentUser?.uid]);
 
     const handleRemove = async (animeId) => {
         try {
-            await axios.delete(`${API}/watchlist/${animeId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await removeFromWatchlist(currentUser.uid, animeId);
             setItems(prev => prev.filter(a => a.id !== animeId));
             toast.success('Eliminado de tu lista');
         } catch { toast.error('Error al eliminar'); }
     };
 
-    if (!user) return (
+    if (!currentUser) return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-500 px-4">
             <span className="material-symbols-outlined text-6xl mb-4 text-gray-300">lock</span>
             <h2 className="text-2xl font-black text-gray-900 mb-2">Inicia sesión</h2>
@@ -120,7 +121,7 @@ const Watchlist = ({ user }) => {
                                             </button>
                                             {anime.added_at && (
                                                 <span className="text-[10px] text-gray-400">
-                                                    Añadido {new Date(anime.added_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                                    Añadido {new Date(anime.added_at?.toDate ? anime.added_at.toDate() : anime.added_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                                                 </span>
                                             )}
                                         </div>
@@ -136,4 +137,3 @@ const Watchlist = ({ user }) => {
 };
 
 export default Watchlist;
-import { API } from '../utils/api.js';

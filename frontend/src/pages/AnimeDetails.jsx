@@ -1,8 +1,20 @@
-
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { getAnime, getTrending } from '../services/animeService';
+import { checkInWatchlist, addToWatchlist, removeFromWatchlist } from '../services/watchlistService';
+import { checkIsFavorite, addFavorite, removeFavorite } from '../services/favoritesService';
+import { getAnimeProgress, markEpisodeWatched } from '../services/progressService';
+import { getCapsules, createCapsule } from '../services/capsulesService';
 import { isAgeVerified } from '../utils/ageGate';
+
 const AnimeDetails = ({ user }) => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { profile } = useAuth();
+    const currentUser = user || profile;
+
     const [anime, setAnime] = useState(null);
     const [loading, setLoading] = useState(true);
     const [trending, setTrending] = useState([]);
@@ -23,8 +35,8 @@ const AnimeDetails = ({ user }) => {
             setLoading(true);
             setEpsToShow(24);
             try {
-                const res = await axios.get(`${API}/anime/${id}`);
-                const mediaData = res.data.data.Media;
+                const res = await getAnime(id);
+                const mediaData = res.data.Media;
                 setAnime(mediaData);
                 if (mediaData.isAdult && !isAgeVerified()) {
                     setAgeGateVisible(true);
@@ -41,34 +53,25 @@ const AnimeDetails = ({ user }) => {
                 const filtered = existing.filter(h => h.path !== historyItem.path);
                 filtered.unshift(historyItem);
                 localStorage.setItem('spoilersafe_history', JSON.stringify(filtered.slice(0, 50)));
-                const trendRes = await axios.get(`${API}/anime/trending`);
-                setTrending(trendRes.data.data.Page.media.slice(0, 5));
 
-                const token = localStorage.getItem('token');
-                if (token) {
+                const trendRes = await getTrending();
+                setTrending(trendRes.data?.Page?.media?.slice(0, 5) || []);
+
+                if (currentUser?.uid) {
+                    const uid = currentUser.uid;
                     try {
-                        const wlRes = await axios.get(`${API}/watchlist/check/${id}`, {
-                            headers: { Authorization: `Bearer ${token}` }
-                        });
-                        setInWatchlist(wlRes.data.in_watchlist);
-                    } catch (e) { /* not logged in */ }
-                    try {
-                        const favRes = await axios.get(`${API}/favorites/check/anime/${id}`, {
-                            headers: { Authorization: `Bearer ${token}` }
-                        });
-                        setIsFavorite(favRes.data.is_favorite);
+                        setInWatchlist(await checkInWatchlist(uid, id));
                     } catch (e) { /* ignore */ }
                     try {
-                        const progRes = await axios.get(`${API}/anime/${id}/progress`, {
-                            headers: { Authorization: `Bearer ${token}` }
-                        });
-                        setWatchedEps(new Set(progRes.data.watched_episodes));
+                        setIsFavorite(await checkIsFavorite(uid, 'anime', id));
                     } catch (e) { /* ignore */ }
                     try {
-                        const capRes = await axios.get(`${API}/anime/${id}/capsules`, {
-                            headers: { Authorization: `Bearer ${token}` }
-                        });
-                        setCapsules(capRes.data);
+                        const watched = await getAnimeProgress(uid, id);
+                        setWatchedEps(new Set(watched));
+                    } catch (e) { /* ignore */ }
+                    try {
+                        const caps = await getCapsules(uid, id, 0);
+                        setCapsules(caps);
                     } catch (e) { console.error(e); }
                 }
             } catch (err) {
@@ -84,28 +87,19 @@ const AnimeDetails = ({ user }) => {
     }, [id]);
 
     const handleCreateCapsule = async () => {
-        if (!user) {
+        if (!currentUser) {
             toast.error("Debes iniciar sesión para crear cápsulas.");
             return;
         }
         if (!newCapsuleText.trim()) return;
 
         try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${API}/anime/capsule`, {
-                anime_id: parseInt(id),
-                unlock_episode: parseInt(unlockEpisode),
-                content: newCapsuleText
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await createCapsule(currentUser.uid, currentUser.username, id, newCapsuleText, unlockEpisode);
             toast.success(`Cápsula enterrada! Se abrirá en el ep ${unlockEpisode}`);
             setNewCapsuleText('');
-            
-            const capRes = await axios.get(`${API}/anime/${id}/capsules`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setCapsules(capRes.data);
+
+            const caps = await getCapsules(currentUser.uid, id, 0);
+            setCapsules(caps);
         } catch (err) {
             toast.error("Error al crear la cápsula");
         }
@@ -154,11 +148,8 @@ const AnimeDetails = ({ user }) => {
 
     const title = anime.title.romaji || anime.title.english;
     const coverImage = anime.coverImage.extraLarge || anime.coverImage.large;
-    // Preferimos streaming thumbnail (1920×1080 16:9) sobre el bannerImage de AniList (~1900×400)
-    // y ambos sobre el cartel vertical como último recurso
     const streamingThumb = anime.streamingEpisodes?.find(ep => ep.thumbnail)?.thumbnail;
     const bannerImage = streamingThumb || anime.bannerImage || coverImage;
-    // For ongoing anime, nextAiringEpisode.episode - 1 = total aired so far
     const totalEpisodes = anime.episodes || (anime.nextAiringEpisode ? anime.nextAiringEpisode.episode - 1 : 12);
 
     return (
@@ -250,15 +241,14 @@ const AnimeDetails = ({ user }) => {
                                 <button
                                     title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
                                     onClick={async () => {
-                                        const token = localStorage.getItem('token');
-                                        if (!token) { toast.error('Inicia sesión primero'); return; }
+                                        if (!currentUser?.uid) { toast.error('Inicia sesión primero'); return; }
                                         try {
                                             if (isFavorite) {
-                                                await axios.delete(`${API}/favorites/anime/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                                await removeFavorite(currentUser.uid, 'anime', id);
                                                 setIsFavorite(false);
                                                 toast.success('Eliminado de favoritos');
                                             } else {
-                                                await axios.post(`${API}/favorites`, {
+                                                await addFavorite(currentUser.uid, {
                                                     media_id: parseInt(id),
                                                     media_type: 'anime',
                                                     title: anime.title?.romaji || anime.title?.english || '',
@@ -266,13 +256,12 @@ const AnimeDetails = ({ user }) => {
                                                     banner_image: anime.bannerImage || '',
                                                     genres: anime.genres || [],
                                                     average_score: anime.averageScore || null,
-                                                }, { headers: { Authorization: `Bearer ${token}` } });
+                                                });
                                                 setIsFavorite(true);
-                                                toast.success('¡Añadido a favoritos! ❤️');
+                                                toast.success('¡Añadido a favoritos!');
                                             }
                                         } catch (err) {
-                                            if (err.response?.status === 409) { setIsFavorite(true); }
-                                            else toast.error('Error al actualizar favoritos');
+                                            toast.error('Error al actualizar favoritos');
                                         }
                                     }}
                                     className={`p-3 rounded-lg border-2 transition-all hover:scale-105 active:scale-100 ${
@@ -288,21 +277,27 @@ const AnimeDetails = ({ user }) => {
                                 <button
                                     title={inWatchlist ? 'Quitar de mi lista' : 'Añadir a mi lista'}
                                     onClick={async () => {
-                                        const token = localStorage.getItem('token');
-                                        if (!token) { toast.error('Inicia sesión primero'); return; }
+                                        if (!currentUser?.uid) { toast.error('Inicia sesión primero'); return; }
                                         try {
                                             if (inWatchlist) {
-                                                await axios.delete(`${API}/watchlist/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                                await removeFromWatchlist(currentUser.uid, id);
                                                 setInWatchlist(false);
                                                 toast.success('Eliminado de tu lista');
                                             } else {
-                                                await axios.post(`${API}/watchlist`, { anime_id: parseInt(id) }, { headers: { Authorization: `Bearer ${token}` } });
+                                                await addToWatchlist(currentUser.uid, id, {
+                                                    title: anime.title,
+                                                    coverImage: anime.coverImage,
+                                                    bannerImage: anime.bannerImage,
+                                                    genres: anime.genres,
+                                                    episodes: anime.episodes,
+                                                    averageScore: anime.averageScore,
+                                                    status: anime.status,
+                                                });
                                                 setInWatchlist(true);
                                                 toast.success('Añadido a tu lista');
                                             }
                                         } catch (err) {
-                                            if (err.response?.status === 409) toast.error('Ya está en tu lista');
-                                            else toast.error('Error al actualizar la lista');
+                                            toast.error('Error al actualizar la lista');
                                         }
                                     }}
                                     className={`p-3 rounded-lg border-2 transition-all hover:scale-105 active:scale-100 ${
@@ -360,21 +355,16 @@ const AnimeDetails = ({ user }) => {
                                 ({totalEpisodes} episodios{anime.status === 'RELEASING' ? ' • En emisión' : ''})
                             </span>
                         </h2>
-                        {localStorage.getItem('token') && watchedEps.size < totalEpisodes && (
+                        {currentUser?.uid && watchedEps.size < totalEpisodes && (
                             <button
                                 onClick={async () => {
-                                    const token = localStorage.getItem('token');
-                                    if (!token) return;
+                                    if (!currentUser?.uid) return;
                                     const unread = Array.from({ length: totalEpisodes }, (_, i) => i + 1).filter(n => !watchedEps.has(n));
                                     let earned = 0;
                                     for (const n of unread) {
                                         try {
-                                            const res = await axios.post(
-                                                `${API}/anime/${id}/episodes/${n}/watched`,
-                                                {},
-                                                { headers: { Authorization: `Bearer ${token}` } }
-                                            );
-                                            earned += res.data.points_earned || 0;
+                                            const res = await markEpisodeWatched(currentUser.uid, id, n);
+                                            earned += res.points_earned || 0;
                                             setWatchedEps(prev => new Set([...prev, n]));
                                         } catch { /* continue */ }
                                     }
@@ -465,7 +455,7 @@ const AnimeDetails = ({ user }) => {
                         <span className="w-1 h-6 bg-primary block rounded-full"></span>
                         Cápsulas del Tiempo ⏳
                     </h2>
-                    
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Crear Cápsula */}
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 h-fit">
@@ -474,28 +464,28 @@ const AnimeDetails = ({ user }) => {
                                 Enterrar Nueva Cápsula
                             </h3>
                             <p className="text-sm text-gray-500 mb-4">Escribe tus teorías iniciales. Permanecerán bloqueadas hasta que alcances el episodio objetivo.</p>
-                            
-                            <textarea 
+
+                            <textarea
                                 className="w-full bg-gray-50 border border-gray-200 rounded p-3 text-sm focus:ring-2 focus:ring-primary outline-none mb-3 resize-none"
                                 rows="3"
                                 placeholder="Yo creo que el villano es..."
                                 value={newCapsuleText}
                                 onChange={(e) => setNewCapsuleText(e.target.value)}
                             ></textarea>
-                            
+
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <label className="text-sm font-bold text-gray-600">Abrir en Ep:</label>
-                                    <input 
-                                        type="number" 
-                                        min="1" 
-                                        max={anime.episodes || 100} 
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={anime.episodes || 100}
                                         className="w-16 p-1 border border-gray-200 rounded text-center"
                                         value={unlockEpisode}
                                         onChange={(e) => setUnlockEpisode(e.target.value)}
                                     />
                                 </div>
-                                <button 
+                                <button
                                     onClick={handleCreateCapsule}
                                     className="bg-primary hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-sm text-sm uppercase transition-colors"
                                 >
@@ -520,7 +510,7 @@ const AnimeDetails = ({ user }) => {
                                                     {cap.locked ? `Bloqueada hasta Ep ${cap.unlock_at}` : 'Desbloqueada'}
                                                 </span>
                                             </div>
-                                            
+
                                             {cap.locked ? (
                                                 <div className="flex flex-col items-center justify-center py-4 opacity-50 select-none">
                                                     <span className="material-symbols-outlined text-4xl mb-2 text-gray-400">lock</span>
@@ -543,4 +533,3 @@ const AnimeDetails = ({ user }) => {
 };
 
 export default AnimeDetails;
-import { API } from '../utils/api.js';

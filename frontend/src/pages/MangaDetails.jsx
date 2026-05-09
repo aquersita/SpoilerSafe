@@ -1,15 +1,20 @@
-
-import axios from 'axios';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { getManga } from '../services/mangaService';
+import { getMangaProgress, markChapterRead as markChapterReadService } from '../services/progressService';
+import { checkIsFavorite, addFavorite, removeFavorite } from '../services/favoritesService';
 
 const MangaDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { profile } = useAuth();
+
     const [manga, setManga] = useState(null);
     const [loading, setLoading] = useState(true);
     const [readChapters, setReadChapters] = useState(new Set());
     const [isFavorite, setIsFavorite] = useState(false);
     const [toast, setToast] = useState(null);
-    const token = localStorage.getItem('token');
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -18,8 +23,8 @@ const MangaDetails = () => {
         const fetchMangaDetails = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`${API}/manga/${id}`);
-                setManga(res.data.data.Media);
+                const res = await getManga(id);
+                setManga(res.data.Media);
             } catch (err) {
                 console.error("Error fetching manga details:", err);
             } finally {
@@ -31,16 +36,14 @@ const MangaDetails = () => {
     }, [id]);
 
     useEffect(() => {
-        if (!id || !token) return;
-        axios.get(`${API}/manga/${id}/progress`, {
-            headers: { Authorization: `Bearer ${token}` }
-        }).then(r => setReadChapters(new Set(r.data.read_chapters)))
-          .catch(() => {});
-        axios.get(`${API}/favorites/check/manga/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        }).then(r => setIsFavorite(r.data.is_favorite))
-          .catch(() => {});
-    }, [id, token]);
+        if (!id || !profile?.uid) return;
+        getMangaProgress(profile.uid, id)
+            .then(read => setReadChapters(new Set(read)))
+            .catch(() => {});
+        checkIsFavorite(profile.uid, 'manga', id)
+            .then(fav => setIsFavorite(fav))
+            .catch(() => {});
+    }, [id, profile?.uid]);
 
     const showToast = (msg) => {
         setToast(msg);
@@ -48,17 +51,13 @@ const MangaDetails = () => {
     };
 
     const markChapterRead = async (chNum) => {
-        if (!token) { navigate('/login'); return; }
+        if (!profile?.uid) { navigate('/login'); return; }
         if (readChapters.has(chNum)) return;
         try {
-            const res = await axios.post(
-                `${API}/manga/${id}/chapters/${chNum}/read`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const res = await markChapterReadService(profile.uid, id, chNum);
             setReadChapters(prev => new Set([...prev, chNum]));
-            if (res.data.points_earned > 0) {
-                showToast(`+${res.data.points_earned} XP — Capítulo ${chNum} leído`);
+            if (res.points_earned > 0) {
+                showToast(`+${res.points_earned} XP — Capítulo ${chNum} leído`);
             }
         } catch {
             showToast('Error al marcar capítulo');
@@ -66,19 +65,15 @@ const MangaDetails = () => {
     };
 
     const markAllRead = async () => {
-        if (!token || !manga?.chapters) return;
+        if (!profile?.uid || !manga?.chapters) return;
         const unread = Array.from({ length: manga.chapters }, (_, i) => i + 1)
             .filter(n => !readChapters.has(n));
         if (unread.length === 0) return;
         let total = 0;
         for (const n of unread) {
             try {
-                const res = await axios.post(
-                    `${API}/manga/${id}/chapters/${n}/read`,
-                    {},
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                total += res.data.points_earned || 0;
+                const res = await markChapterReadService(profile.uid, id, n);
+                total += res.points_earned || 0;
                 setReadChapters(prev => new Set([...prev, n]));
             } catch { /* continue */ }
         }
@@ -105,7 +100,7 @@ const MangaDetails = () => {
         );
     }
 
-    const title = manga.title.romaji || manga.title.english || manga.title.native;
+    const title = manga.title.romaji || manga.title.english;
     const cleanDescription = manga.description
         ? manga.description.replace(/<[^>]*>?/gm, '')
         : "Sin sinopsis disponible.";
@@ -160,22 +155,18 @@ const MangaDetails = () => {
 
                     <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-2 leading-tight">{title}</h1>
 
-                    {manga.title.native && (
-                        <h2 className="text-xl text-gray-500 font-medium mb-6">{manga.title.native}</h2>
-                    )}
-
                     {/* Botón favorito */}
                     <div className="mb-6">
                         <button
                             onClick={async () => {
-                                if (!token) { navigate('/login'); return; }
+                                if (!profile?.uid) { navigate('/login'); return; }
                                 try {
                                     if (isFavorite) {
-                                        await axios.delete(`${API}/favorites/manga/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                        await removeFavorite(profile.uid, 'manga', id);
                                         setIsFavorite(false);
                                         showToast('Eliminado de favoritos');
                                     } else {
-                                        await axios.post(`${API}/favorites`, {
+                                        await addFavorite(profile.uid, {
                                             media_id: parseInt(id),
                                             media_type: 'manga',
                                             title: manga.title?.romaji || manga.title?.english || '',
@@ -183,13 +174,12 @@ const MangaDetails = () => {
                                             banner_image: manga.bannerImage || '',
                                             genres: manga.genres || [],
                                             average_score: manga.averageScore || null,
-                                        }, { headers: { Authorization: `Bearer ${token}` } });
+                                        });
                                         setIsFavorite(true);
-                                        showToast('¡Añadido a favoritos! ❤️');
+                                        showToast('¡Añadido a favoritos!');
                                     }
                                 } catch (err) {
-                                    if (err.response?.status === 409) setIsFavorite(true);
-                                    else showToast('Error al actualizar favoritos');
+                                    showToast('Error al actualizar favoritos');
                                 }
                             }}
                             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
@@ -232,7 +222,7 @@ const MangaDetails = () => {
                         <p className="text-gray-600 leading-relaxed">{cleanDescription}</p>
                     </div>
 
-                    {/* ── Seguimiento de lectura ── */}
+                    {/* Seguimiento de lectura */}
                     {totalChapters > 0 && (
                         <div className="mb-10 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
@@ -240,7 +230,7 @@ const MangaDetails = () => {
                                     <span className="material-symbols-outlined text-primary">bookmark_added</span>
                                     Mi Progreso de Lectura
                                 </h3>
-                                {token && readCount < totalChapters && (
+                                {profile?.uid && readCount < totalChapters && (
                                     <button onClick={markAllRead}
                                         className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
                                         <span className="material-symbols-outlined text-sm">done_all</span>
@@ -249,7 +239,6 @@ const MangaDetails = () => {
                                 )}
                             </div>
 
-                            {/* Progress bar */}
                             <div className="mb-4">
                                 <div className="flex justify-between text-xs text-gray-500 mb-1">
                                     <span>{readCount} / {totalChapters} capítulos</span>
@@ -265,14 +254,13 @@ const MangaDetails = () => {
                                 </div>
                             </div>
 
-                            {!token && (
+                            {!profile?.uid && (
                                 <p className="text-sm text-gray-400 italic mb-3">
                                     <button onClick={() => navigate('/login')} className="text-primary font-bold hover:underline">Inicia sesión</button>
                                     {' '}para rastrear tu lectura y ganar +2 XP por capítulo.
                                 </p>
                             )}
 
-                            {/* Chapter grid */}
                             <div className="grid grid-cols-8 sm:grid-cols-12 md:grid-cols-16 gap-1.5 max-h-48 overflow-y-auto">
                                 {Array.from({ length: totalChapters }, (_, i) => i + 1).map(n => {
                                     const isRead = readChapters.has(n);
@@ -284,7 +272,7 @@ const MangaDetails = () => {
                                             className={`aspect-square rounded text-[10px] font-bold transition-all ${
                                                 isRead
                                                     ? 'bg-primary text-white'
-                                                    : token
+                                                    : profile?.uid
                                                         ? 'bg-gray-100 text-gray-500 hover:bg-primary/20 hover:text-primary'
                                                         : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             }`}
@@ -294,7 +282,7 @@ const MangaDetails = () => {
                                     );
                                 })}
                             </div>
-                            {token && (
+                            {profile?.uid && (
                                 <p className="text-[11px] text-gray-400 mt-3 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[14px] text-primary">stars</span>
                                     Ganas +2 XP por cada capítulo marcado como leído
@@ -346,4 +334,3 @@ const MangaDetails = () => {
 };
 
 export default MangaDetails;
-import { API } from '../utils/api.js';

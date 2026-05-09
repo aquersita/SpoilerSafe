@@ -1,8 +1,18 @@
-
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { getAnime } from '../services/animeService';
+import { getComments, postComment, likeComment } from '../services/commentsService';
+import { getAnimeProgress, markEpisodeWatched } from '../services/progressService';
 import SpoilerFog from '../components/SpoilerFog';
+
 const EpisodePlayer = ({ user }) => {
     const navigate = useNavigate();
     const { id, episodeNumber } = useParams();
+    const { profile } = useAuth();
+    const currentUser = user || profile;
+
     const [anime, setAnime] = useState(null);
     const [comments, setComments] = useState([]);
     const [newCommentText, setNewCommentText] = useState('');
@@ -16,31 +26,31 @@ const EpisodePlayer = ({ user }) => {
 
     const fetchComments = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const headers = token ? { Authorization: `Bearer ${token}` } : {};
-            const res = await axios.get(`${API}/anime/${id}/episodes/${episodeNumber}/comments`, { headers });
-            setComments(res.data);
+            const data = await getComments('anime', id, parseInt(episodeNumber));
+            setComments(data);
         } catch (err) {
             console.error("Error fetching comments:", err);
         }
     };
 
     const handlePostComment = async () => {
-        if (!user) {
+        if (!currentUser) {
             toast.error("Debes iniciar sesión para comentar.");
             return;
         }
         if (!newCommentText.trim()) return;
 
         try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${API}/anime/${id}/episodes/${episodeNumber}/comments`, {
-                content: newCommentText,
-                timestamp: 0 
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            
+            await postComment(
+                currentUser.uid,
+                currentUser.username,
+                currentUser.avatar_url,
+                'anime',
+                id,
+                newCommentText,
+                isSpoiler,
+                parseInt(episodeNumber)
+            );
             toast.success("Comentario publicado!");
             setNewCommentText('');
             setIsSpoiler(false);
@@ -51,26 +61,11 @@ const EpisodePlayer = ({ user }) => {
     };
 
     const handleLike = async (commentId) => {
-        if (!user) { toast.error("Inicia sesión para dar like"); return; }
+        if (!currentUser) { toast.error("Inicia sesión para dar like"); return; }
         try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${API}/comments/${commentId}/like`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await likeComment(currentUser.uid, commentId);
             fetchComments();
         } catch (err) { toast.error("Error al dar like"); }
-    };
-
-    const handleReport = async (commentId) => {
-        if (!user) { toast.error("Inicia sesión para reportar"); return; }
-        try {
-            const token = localStorage.getItem('token');
-            const res = await axios.post(`${API}/comments/${commentId}/report`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            toast.success(res.data.msg);
-            fetchComments();
-        } catch (err) { toast.error("Error al reportar"); }
     };
 
     useEffect(() => {
@@ -80,16 +75,13 @@ const EpisodePlayer = ({ user }) => {
         const fetchAnime = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`${API}/anime/${id}`);
-                const mediaData = res.data.data.Media;
+                const res = await getAnime(id);
+                const mediaData = res.data.Media;
                 setAnime(mediaData);
 
-                const token = localStorage.getItem('token');
-                if (token) {
-                    axios.get(`${API}/anime/${id}/progress`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }).then(r => {
-                        setIsWatched(r.data.watched_episodes.includes(parseInt(episodeNumber)));
+                if (currentUser?.uid) {
+                    getAnimeProgress(currentUser.uid, id).then(watched => {
+                        setIsWatched(watched.includes(parseInt(episodeNumber)));
                     }).catch(() => {});
                 }
 
@@ -124,7 +116,6 @@ const EpisodePlayer = ({ user }) => {
     const title = anime?.title?.romaji || anime?.title?.english || 'Anime';
     const coverImage = anime?.coverImage?.extraLarge || anime?.coverImage?.large || '';
     const epNum = parseInt(episodeNumber || 1);
-    // Thumbnail del episodio específico (1920×1080 de Crunchyroll) → mejor que el banner corto de AniList
     const episodeThumb = anime?.streamingEpisodes?.[epNum - 1]?.thumbnail;
     const bannerImage = episodeThumb || anime?.bannerImage || coverImage;
     const totalEps = anime?.episodes || (anime?.nextAiringEpisode ? anime.nextAiringEpisode.episode - 1 : 12);
@@ -237,7 +228,7 @@ const EpisodePlayer = ({ user }) => {
                             {/* Escribir Comentario */}
                             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-6">
                                 <div className="flex gap-3">
-                                    <img src={user?.avatar_url || "https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"} alt="avatar" className="w-9 h-9 rounded-full object-cover shrink-0" />
+                                    <img src={currentUser?.avatar_url || "https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"} alt="avatar" className="w-9 h-9 rounded-full object-cover shrink-0" />
                                     <div className="flex-1">
                                         <textarea
                                             className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
@@ -273,19 +264,19 @@ const EpisodePlayer = ({ user }) => {
                                 )}
                                 {comments.map((comment) => (
                                     <div key={comment.id} className="flex gap-3 pb-5 border-b border-gray-100 last:border-0">
-                                        <img src={"https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"} alt="avatar" className="w-8 h-8 rounded-full shrink-0" />
+                                        <img src={comment.avatar_url || "https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"} alt="avatar" className="w-8 h-8 rounded-full shrink-0" />
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-bold text-gray-900 text-sm">User_{comment.user_id}</span>
-                                                <span className="text-xs text-gray-400">{comment.created_at}</span>
-                                                {comment.is_spoiler === 1 && (
+                                                <span className="font-bold text-gray-900 text-sm">{comment.username || `User_${comment.uid?.slice(0,6)}`}</span>
+                                                <span className="text-xs text-gray-400">{comment.created_at?.toDate ? comment.created_at.toDate().toLocaleDateString('es-ES') : ''}</span>
+                                                {comment.is_spoiler && (
                                                     <span className="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5">
                                                         <span className="material-symbols-outlined text-[10px]">warning</span> Spoiler
                                                     </span>
                                                 )}
                                             </div>
-                                            
-                                            {comment.is_spoiler === 1 ? (
+
+                                            {comment.is_spoiler ? (
                                                 <div className="mt-1 rounded-lg bg-gray-50 border border-gray-200 p-3">
                                                     <SpoilerFog isRevealed={false}>
                                                         <p className="text-gray-700 text-sm">{comment.content}</p>
@@ -294,21 +285,15 @@ const EpisodePlayer = ({ user }) => {
                                             ) : (
                                                 <p className="text-gray-700 text-sm mt-1">{comment.content}</p>
                                             )}
-                                            
+
                                             <div className="flex items-center gap-4 mt-2 text-gray-400 text-xs">
                                                 <button onClick={() => handleLike(comment.id)}
-                                                    className={`flex items-center gap-1 hover:text-primary transition-colors ${comment.is_liked ? 'text-primary' : ''}`}>
-                                                    <span className="material-symbols-outlined text-[14px]">thumb_up</span> {comment.likes_count}
+                                                    className="flex items-center gap-1 hover:text-primary transition-colors">
+                                                    <span className="material-symbols-outlined text-[14px]">thumb_up</span> {comment.likes || 0}
                                                 </button>
                                                 <button className="flex items-center gap-1 hover:text-primary transition-colors">
                                                     <span className="material-symbols-outlined text-[14px]">reply</span> Responder
                                                 </button>
-                                                {user && (
-                                                    <button onClick={() => handleReport(comment.id)}
-                                                        className="flex items-center gap-1 hover:text-red-500 transition-colors ml-auto">
-                                                        <span className="material-symbols-outlined text-[14px]">flag</span> Reportar
-                                                    </button>
-                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -343,18 +328,13 @@ const EpisodePlayer = ({ user }) => {
                                 </div>
                                 <button
                                     onClick={async () => {
-                                        const token = localStorage.getItem('token');
-                                        if (!token) { toast.error('Inicia sesión para marcar episodios'); return; }
+                                        if (!currentUser?.uid) { toast.error('Inicia sesión para marcar episodios'); return; }
                                         if (isWatched) return;
                                         try {
-                                            const res = await axios.post(
-                                                `${API}/anime/${id}/episodes/${epNum}/watched`,
-                                                {},
-                                                { headers: { Authorization: `Bearer ${token}` } }
-                                            );
+                                            const res = await markEpisodeWatched(currentUser.uid, id, epNum);
                                             setIsWatched(true);
-                                            if (res.data.points_earned > 0) {
-                                                toast.success(`+${res.data.points_earned} XP — Episodio ${epNum} visto`);
+                                            if (res.points_earned > 0) {
+                                                toast.success(`+${res.points_earned} XP — Episodio ${epNum} visto`);
                                             } else {
                                                 toast.success(`Episodio ${epNum} marcado como visto`);
                                             }
@@ -407,4 +387,3 @@ const EpisodePlayer = ({ user }) => {
 };
 
 export default EpisodePlayer;
-import { API } from '../utils/api.js';

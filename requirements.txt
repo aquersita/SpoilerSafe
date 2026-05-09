@@ -1,7 +1,6 @@
 fastapi
 uvicorn
 firebase-admin
-firebase-functions>=0.1.0
 python-jose[cryptography]
 passlib[bcrypt]
 requests

@@ -33,7 +33,6 @@ export async function markEpisodeWatched(uid, animeId, epNum) {
 
   await setDoc(ref, { watched: arrayUnion(epNum) }, { merge: true });
 
-  // Award XP
   const userRef = doc(db, 'users', uid);
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
@@ -42,6 +41,7 @@ export async function markEpisodeWatched(uid, animeId, epNum) {
     await updateDoc(userRef, {
       points: increment(XP_PER_EPISODE),
       level: newLevel,
+      'stats.episodes_watched': increment(1),
     });
   }
 
@@ -70,6 +70,7 @@ export async function markChapterRead(uid, mangaId, chapterNum) {
     await updateDoc(userRef, {
       points: increment(XP_PER_CHAPTER),
       level: newLevel,
+      'stats.manga_chapters': increment(1),
     });
   }
 

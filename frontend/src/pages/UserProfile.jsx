@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfileByUsername, equipReward } from '../services/userService';
@@ -572,6 +572,84 @@ const EditModal = ({ data, onChange, onSave, onClose, saving }) => (
   </div>
 );
 
+/* ─── Rewards ───────────────────────────────────────────────────────────────── */
+const REWARDS = [
+  { key: 'frame_bronze',  type: 'frame',  name: 'Marco Bronce',   description: 'Nivel 2',         required_level: 2,  preview_color: '#cd7f32' },
+  { key: 'frame_silver',  type: 'frame',  name: 'Marco Plata',    description: 'Nivel 4',         required_level: 4,  preview_color: '#c0c0c0' },
+  { key: 'frame_gold',    type: 'frame',  name: 'Marco Oro',      description: 'Nivel 6',         required_level: 6,  preview_color: '#ffd700' },
+  { key: 'frame_diamond', type: 'frame',  name: 'Marco Diamante', description: 'Nivel 8',         required_level: 8,  preview_color: '#b9f2ff' },
+  { key: 'emoji_fire',    type: 'emoji',  name: '🔥 Llama',       description: '5 eps vistos',    required_episodes: 5,   emoji: '🔥' },
+  { key: 'emoji_star',    type: 'emoji',  name: '⭐ Estrella',    description: '25 eps vistos',   required_episodes: 25,  emoji: '⭐' },
+  { key: 'emoji_crown',   type: 'emoji',  name: '👑 Corona',      description: '100 eps vistos',  required_episodes: 100, emoji: '👑' },
+  { key: 'banner_orange', type: 'banner', name: 'Banner Naranja', description: 'Nivel 3',         required_level: 3,  preview_color: 'linear-gradient(135deg,#f97316,#ef4444)' },
+  { key: 'banner_blue',   type: 'banner', name: 'Banner Océano',  description: 'Nivel 5',         required_level: 5,  preview_color: 'linear-gradient(135deg,#3b82f6,#06b6d4)' },
+  { key: 'banner_purple', type: 'banner', name: 'Banner Galaxia', description: 'Nivel 7',         required_level: 7,  preview_color: 'linear-gradient(135deg,#8b5cf6,#ec4899)' },
+];
+
+const RewardsCard = ({ profile, stats, isOwner, onEquip }) => {
+  const level = profile?.level ?? 1;
+  const eps   = stats?.episodes_watched ?? 0;
+
+  const isUnlocked = (r) => {
+    if (r.required_level && level < r.required_level) return false;
+    if (r.required_episodes && eps < r.required_episodes) return false;
+    return true;
+  };
+
+  const isEquipped = (r) => {
+    if (r.type === 'frame')  return profile?.active_frame  === r.key;
+    if (r.type === 'banner') return profile?.active_banner === r.key;
+    if (r.type === 'emoji')  return profile?.active_emoji  === r.key;
+    return false;
+  };
+
+  return (
+    <Card>
+      <SectionHeader icon={<Svg path={ICON.trophy} className="size-3.5" />} title="Recompensas" />
+      <div className="space-y-1.5">
+        {REWARDS.map((r) => {
+          const unlocked = isUnlocked(r);
+          const equipped = isEquipped(r);
+          return (
+            <div key={r.key} className={cls(
+              'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
+              equipped ? 'border-orange-300 bg-orange-50/60' :
+              unlocked ? 'border-slate-200 bg-white hover:border-orange-200' :
+              'border-slate-100 bg-slate-50/50 opacity-60'
+            )}>
+              <div className="size-8 rounded-lg shrink-0 flex items-center justify-center text-lg overflow-hidden"
+                style={{ background: r.preview_color || '#f0f0f0' }}>
+                {r.type === 'emoji' ? r.emoji : null}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-bold text-slate-800 truncate">{r.name}</p>
+                <p className="text-[10px] text-slate-500">{r.description}</p>
+              </div>
+              {isOwner && unlocked && (
+                <button
+                  onClick={() => onEquip(r)}
+                  disabled={equipped}
+                  className={cls(
+                    'shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all',
+                    equipped
+                      ? 'bg-orange-500 text-white cursor-default'
+                      : 'bg-slate-100 text-slate-600 hover:bg-orange-100 hover:text-orange-700'
+                  )}
+                >
+                  {equipped ? 'Equipado' : 'Equipar'}
+                </button>
+              )}
+              {!unlocked && (
+                <span className="shrink-0"><Svg path={ICON.lock} className="size-3.5 text-slate-400" /></span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+};
+
 /* ─── Page component (data fetching) ────────────────────────────────────────── */
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -679,7 +757,7 @@ const UserProfile = () => {
 
   const achievements = [];
   const earned = 0;
-  const stats = null;
+  const stats = profile?.stats || { episodes_watched: 0, manga_chapters: 0, comments: 0 };
 
   return (
     <div className="min-h-screen bg-[#f6faff] text-slate-800 antialiased">
@@ -716,6 +794,7 @@ const UserProfile = () => {
           <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-6">
             <RankCard profile={profile} />
             <StatsListCard stats={stats} profile={profile} />
+            <RewardsCard profile={profile} stats={stats} isOwner={isOwner} onEquip={handleEquip} />
           </aside>
         </div>
       </div>

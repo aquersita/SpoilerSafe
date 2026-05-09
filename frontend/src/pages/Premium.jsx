@@ -1,7 +1,10 @@
-
 import toast from 'react-hot-toast';
-const Premium = ({ user }) => {
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
+const Premium = () => {
     const navigate = useNavigate();
+    const { firebaseUser, profile: user, setProfile } = useAuth();
     const [showCheckout, setShowCheckout] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -39,25 +42,16 @@ const Premium = ({ user }) => {
         }
 
         setIsProcessing(true);
-        
-        // Simular retraso de pasarela de pago (Stripe)
+
+        // Simulate payment gateway delay
         setTimeout(async () => {
             try {
-                const token = localStorage.getItem('token');
-                const res = await axios.post(`${API}/users/me/upgrade`, {}, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                
-                if (res.data.success) {
-                    setIsProcessing(false);
-                    setIsSuccess(true);
-                    toast.success("¡Pago procesado con éxito!");
-                    
-                    // Esperar a la animación y recargar para refrescar usuario global
-                    setTimeout(() => {
-                        window.location.href = '/settings';
-                    }, 3000);
-                }
+                await updateDoc(doc(db, 'users', firebaseUser.uid), { is_premium: true });
+                setProfile(prev => ({ ...prev, is_premium: true }));
+                setIsProcessing(false);
+                setIsSuccess(true);
+                toast.success("¡Pago procesado con éxito!");
+                setTimeout(() => { window.location.href = '/'; }, 3000);
             } catch (err) {
                 setIsProcessing(false);
                 toast.error("Error al procesar el pago. Inténtalo de nuevo.");
@@ -312,4 +306,3 @@ const Premium = ({ user }) => {
 };
 
 export default Premium;
-import { API } from '../utils/api.js';

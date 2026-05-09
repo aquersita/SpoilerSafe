@@ -17,7 +17,7 @@ export async function getComments(mediaType, mediaId, episodeNum = null) {
 }
 
 export async function postComment(uid, username, avatarUrl, mediaType, mediaId, content, isSpoiler, episodeNum = null) {
-  return addDoc(collection(db, 'comments'), {
+  const ref = await addDoc(collection(db, 'comments'), {
     uid,
     username,
     avatar_url: avatarUrl || '',
@@ -32,6 +32,11 @@ export async function postComment(uid, username, avatarUrl, mediaType, mediaId, 
     reported_by: [],
     created_at: serverTimestamp(),
   });
+  // bump comment count in user doc
+  try {
+    await updateDoc(doc(db, 'users', uid), { 'stats.comments': increment(1) });
+  } catch { /* ignore if user doc doesn't have stats yet */ }
+  return ref;
 }
 
 export async function likeComment(uid, commentId) {

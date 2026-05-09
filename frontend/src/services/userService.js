@@ -52,6 +52,7 @@ export async function registerUser(email, password, username) {
     active_banner: '',
     active_emoji: '',
     created_at: serverTimestamp(),
+    stats: { episodes_watched: 0, manga_chapters: 0, comments: 0 },
   };
 
   await setDoc(doc(db, 'users', uid), profileData);

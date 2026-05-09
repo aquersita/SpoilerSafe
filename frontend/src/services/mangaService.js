@@ -15,6 +15,7 @@ const MANGA_FIELDS = `
   bannerImage description status chapters volumes
   season seasonYear averageScore genres format isAdult
   startDate { year month day }
+  externalLinks { site url }
   staff(perPage: 4) { nodes { name { full } primaryOccupations } }
 `;
 

@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   getOrCreateConvo, sendMessage, subscribeToConvos,
-  subscribeToMessages, markRead, getConvoId,
+  subscribeToMessages, markRead,
 } from '../services/messagesService';
 import { searchUsers, getUserProfileByUsername } from '../services/userService';
 
@@ -14,17 +14,14 @@ const COLORS = [
 const colorFor = (name = '') =>
   COLORS[name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
 
-const Avatar = ({ username, avatar_url, size = 'w-10 h-10', online = false }) => (
-  <div className="relative shrink-0">
+const Avatar = ({ username, avatar_url, size = 'w-10 h-10' }) => (
+  <div className="shrink-0">
     {avatar_url
       ? <img src={avatar_url} alt={username} className={`${size} rounded-full object-cover`} />
-      : (
-        <div className={`${size} rounded-full ${colorFor(username)} flex items-center justify-center text-white font-black text-sm`}>
+      : <div className={`${size} rounded-full ${colorFor(username)} flex items-center justify-center text-white font-black text-sm`}>
           {(username || '?')[0].toUpperCase()}
         </div>
-      )
     }
-    {online && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />}
   </div>
 );
 
@@ -35,69 +32,76 @@ export default function Messages() {
 
   const [convos, setConvos] = useState([]);
   const [activeConvoId, setActiveConvoId] = useState(null);
-  const [activeOtherUid, setActiveOtherUid] = useState(null);
-  const [activeOtherUsername, setActiveOtherUsername] = useState(paramUsername || null);
+  // Single object avoids split-state race conditions
+  const [activeOther, setActiveOther] = useState(null); // { uid, username, avatar }
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [mobileView, setMobileView] = useState(paramUsername ? 'chat' : 'inbox');
+  const [view, setView] = useState('inbox'); // 'inbox' | 'chat'
   const [searchQ, setSearchQ] = useState('');
-  const [userResults, setUserResults] = useState([]);
-  const [loadingConvo, setLoadingConvo] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [initializing, setInitializing] = useState(!!paramUsername);
 
   const listRef = useRef(null);
   const inputRef = useRef(null);
-  const unsubMessages = useRef(null);
+  const unsubMsgs = useRef(null);
+  const paramHandled = useRef(false);
 
-  // Redirect if not logged in
+  // Redirect if not authenticated
   useEffect(() => {
-    if (!firebaseUser) navigate('/login');
+    if (firebaseUser === null) navigate('/login');
   }, [firebaseUser, navigate]);
 
-  // Subscribe to conversations
+  // Live inbox subscription
   useEffect(() => {
-    if (!firebaseUser) return;
-    const unsub = subscribeToConvos(firebaseUser.uid, setConvos);
-    return () => unsub();
-  }, [firebaseUser]);
+    if (!firebaseUser?.uid) return;
+    return subscribeToConvos(firebaseUser.uid, setConvos);
+  }, [firebaseUser?.uid]);
 
-  // Open conversation when paramUsername provided (e.g. /messages/someUser)
+  // Handle deep-link (/messages/:username) — runs once when auth+profile are ready
   useEffect(() => {
-    if (!paramUsername || !firebaseUser || !profile) return;
-    openConvoByUsername(paramUsername);
-  }, [paramUsername, firebaseUser?.uid, profile?.username]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!paramUsername || paramHandled.current || !firebaseUser || !profile) return;
+    paramHandled.current = true;
+    setInitializing(true);
+    openConvoByUsername(paramUsername).finally(() => setInitializing(false));
+  }, [firebaseUser?.uid, profile?.username]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Subscribe to messages when active convo changes
+  // Subscribe to messages for the active conversation
   useEffect(() => {
-    if (unsubMessages.current) { unsubMessages.current(); unsubMessages.current = null; }
+    unsubMsgs.current?.();
+    unsubMsgs.current = null;
+    setMessages([]);
     if (!activeConvoId) return;
-    unsubMessages.current = subscribeToMessages(activeConvoId, setMessages);
+    unsubMsgs.current = subscribeToMessages(activeConvoId, setMessages);
     markRead(activeConvoId, firebaseUser?.uid);
-    return () => { if (unsubMessages.current) unsubMessages.current(); };
+    return () => unsubMsgs.current?.();
   }, [activeConvoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-scroll to bottom
+  // Auto-scroll to latest message
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages]);
 
-  // Focus input when conversation opens
+  // Focus input when a chat is opened
   useEffect(() => {
-    if (activeConvoId) setTimeout(() => inputRef.current?.focus(), 100);
+    if (activeConvoId) setTimeout(() => inputRef.current?.focus(), 80);
   }, [activeConvoId]);
 
-  // User search
+  // Debounced user search
   useEffect(() => {
-    if (!searchQ || searchQ.length < 2) { setUserResults([]); return; }
+    if (!searchQ || searchQ.length < 2) { setSearchResults([]); return; }
     const t = setTimeout(async () => {
-      const results = await searchUsers(searchQ).catch(() => []);
-      setUserResults(results.filter(u => u.uid !== firebaseUser?.uid));
+      try {
+        const r = await searchUsers(searchQ);
+        setSearchResults(r.filter(u => u.uid !== firebaseUser?.uid));
+      } catch { setSearchResults([]); }
     }, 300);
     return () => clearTimeout(t);
   }, [searchQ, firebaseUser?.uid]);
 
-  const openConvoByUsername = useCallback(async (otherUsername) => {
+  // ── helpers ───────────────────────────────────────────────────────────────
+
+  async function openConvoByUsername(otherUsername) {
     if (!firebaseUser || !profile) return;
-    setLoadingConvo(true);
     try {
       const otherProfile = await getUserProfileByUsername(otherUsername);
       if (!otherProfile) return;
@@ -106,59 +110,68 @@ export default function Messages() {
         otherProfile.uid, otherProfile.username, otherProfile.avatar_url || '',
       );
       setActiveConvoId(id);
-      setActiveOtherUid(otherProfile.uid);
-      setActiveOtherUsername(otherProfile.username);
-      setMobileView('chat');
-    } finally {
-      setLoadingConvo(false);
+      setActiveOther({
+        uid: otherProfile.uid,
+        username: otherProfile.username,
+        avatar: otherProfile.avatar_url || '',
+      });
+      setView('chat');
+    } catch (err) {
+      console.error('openConvoByUsername:', err);
     }
-  }, [firebaseUser, profile]);
+  }
 
-  const openConvo = useCallback(async (convo) => {
-    const otherUid = convo.participants.find(p => p !== firebaseUser?.uid);
-    const otherUsername = convo.usernames?.[otherUid] || otherUid;
-    setActiveConvoId(convo.id);
-    setActiveOtherUid(otherUid);
-    setActiveOtherUsername(otherUsername);
-    setMobileView('chat');
+  // Plain sync function — no useCallback, no async, no race conditions
+  function openConvo(conv) {
+    const otherUid = conv.participants?.find(p => p !== firebaseUser?.uid);
+    if (!otherUid) return;
+    const other = {
+      uid: otherUid,
+      username: conv.usernames?.[otherUid] || otherUid,
+      avatar: conv.avatars?.[otherUid] || '',
+    };
+    setActiveConvoId(conv.id);
+    setActiveOther(other);
+    setView('chat');
     setSearchQ('');
-    setUserResults([]);
-    // replaceState updates the URL bar without triggering React Router's
-    // paramUsername effect, which would re-open the convo and show a loading flash.
-    window.history.replaceState(null, '', `/messages/${otherUsername}`);
-    markRead(convo.id, firebaseUser?.uid);
-  }, [firebaseUser?.uid]);
+    setSearchResults([]);
+    markRead(conv.id, firebaseUser?.uid);
+  }
 
-  const handleUserResult = useCallback(async (u) => {
+  async function handleSearchResult(u) {
     setSearchQ('');
-    setUserResults([]);
+    setSearchResults([]);
     await openConvoByUsername(u.username);
-    window.history.replaceState(null, '', `/messages/${u.username}`);
-  }, [openConvoByUsername]);
+  }
 
-  const send = useCallback(async () => {
+  async function send() {
     const text = input.trim();
-    if (!text || !activeOtherUid || !firebaseUser || !profile) return;
+    if (!text || !activeOther?.uid || !firebaseUser || !profile) return;
     setInput('');
-    await sendMessage(firebaseUser.uid, profile.username, activeOtherUid, text);
-  }, [input, activeOtherUid, firebaseUser, profile]);
+    try {
+      await sendMessage(firebaseUser.uid, profile.username, activeOther.uid, text);
+    } catch (err) {
+      console.error('send error:', err);
+    }
+  }
 
-  const handleKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-  };
-
-  const totalUnread = convos.reduce((sum, c) => sum + (c.unread?.[firebaseUser?.uid] || 0), 0);
-
-  const activeConvo = convos.find(c => c.id === activeConvoId);
-  const activeOtherAvatar = activeConvo?.avatars?.[activeOtherUid] || '';
+  // ── early returns ─────────────────────────────────────────────────────────
 
   if (!firebaseUser) return null;
+
+  if (initializing) return (
+    <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-white">
+      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-orange-500" />
+    </div>
+  );
+
+  const totalUnread = convos.reduce((s, c) => s + (c.unread?.[firebaseUser.uid] || 0), 0);
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-white" style={{ fontFamily: "'Plus Jakarta Sans','Inter',sans-serif" }}>
 
       {/* ── LEFT: Inbox ── */}
-      <aside className={`flex flex-col border-r border-gray-200 bg-white shrink-0 ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96`}>
+      <aside className={`flex flex-col border-r border-gray-200 bg-white shrink-0 ${view === 'chat' ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96`}>
         <div className="px-5 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-black text-gray-900">
@@ -177,10 +190,10 @@ export default function Messages() {
               className="w-full bg-gray-100 rounded-xl pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>
-          {userResults.length > 0 && (
+          {searchResults.length > 0 && (
             <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
-              {userResults.map(u => (
-                <button key={u.uid} onClick={() => handleUserResult(u)}
+              {searchResults.map(u => (
+                <button key={u.uid} onClick={() => handleSearchResult(u)}
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
                   <Avatar username={u.username} avatar_url={u.avatar_url} size="w-8 h-8" />
                   <div className="text-left">
@@ -202,8 +215,8 @@ export default function Messages() {
             </div>
           )}
           {convos.map(conv => {
-            const otherUid = conv.participants.find(p => p !== firebaseUser.uid);
-            const otherUsername = conv.usernames?.[otherUid] || otherUid;
+            const otherUid = conv.participants?.find(p => p !== firebaseUser.uid);
+            const otherUsername = conv.usernames?.[otherUid] || otherUid || '?';
             const otherAvatar = conv.avatars?.[otherUid] || '';
             const unread = conv.unread?.[firebaseUser.uid] || 0;
             const isActive = conv.id === activeConvoId;
@@ -230,9 +243,9 @@ export default function Messages() {
         </div>
       </aside>
 
-      {/* ── RIGHT: Conversation ── */}
-      <div className={`flex-1 flex flex-col ${mobileView === 'inbox' ? 'hidden md:flex' : 'flex'}`}>
-        {!activeConvoId || loadingConvo ? (
+      {/* ── RIGHT: Chat ── */}
+      <div className={`flex-1 flex flex-col ${view === 'inbox' ? 'hidden md:flex' : 'flex'}`}>
+        {!activeConvoId ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
             <div className="w-24 h-24 rounded-full bg-orange-50 flex items-center justify-center mb-6">
               <span className="material-symbols-outlined text-primary text-5xl">send</span>
@@ -242,32 +255,35 @@ export default function Messages() {
           </div>
         ) : (
           <>
+            {/* Chat header */}
             <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-200 bg-white shrink-0">
-              <button onClick={() => { setMobileView('inbox'); navigate('/messages', { replace: true }); }}
+              <button
+                onClick={() => { setView('inbox'); setActiveConvoId(null); setActiveOther(null); }}
                 className="md:hidden text-gray-400 hover:text-primary mr-1">
                 <span className="material-symbols-outlined">arrow_back</span>
               </button>
-              <button onClick={() => navigate(`/users/${activeOtherUsername}`)}>
-                <Avatar username={activeOtherUsername} avatar_url={activeOtherAvatar} size="w-10 h-10" />
+              <button onClick={() => navigate(`/users/${activeOther?.username}`)}>
+                <Avatar username={activeOther?.username} avatar_url={activeOther?.avatar} size="w-10 h-10" />
               </button>
               <div className="flex-1 min-w-0">
-                <button onClick={() => navigate(`/users/${activeOtherUsername}`)}
+                <button onClick={() => navigate(`/users/${activeOther?.username}`)}
                   className="font-black text-gray-900 text-sm hover:text-primary transition-colors truncate block">
-                  {activeOtherUsername}
+                  {activeOther?.username}
                 </button>
               </div>
-              <button onClick={() => navigate(`/users/${activeOtherUsername}`)}
+              <button onClick={() => navigate(`/users/${activeOther?.username}`)}
                 className="text-gray-400 hover:text-primary transition-colors">
                 <span className="material-symbols-outlined text-[20px]">person</span>
               </button>
             </div>
 
+            {/* Messages list */}
             <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-[#f6faff]"
               style={{ scrollbarWidth: 'thin' }}>
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center">
-                  <Avatar username={activeOtherUsername} avatar_url={activeOtherAvatar} size="w-16 h-16" />
-                  <p className="mt-4 font-black text-gray-900">{activeOtherUsername}</p>
+                  <Avatar username={activeOther?.username} avatar_url={activeOther?.avatar} size="w-16 h-16" />
+                  <p className="mt-4 font-black text-gray-900">{activeOther?.username}</p>
                   <p className="text-xs text-gray-400 mt-1">Di hola para empezar la conversación 👋</p>
                 </div>
               )}
@@ -275,8 +291,8 @@ export default function Messages() {
                 const isMine = msg.senderUid === firebaseUser.uid;
                 const ts = msg.createdAt?.toDate?.()?.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) || '';
                 const prevMsg = messages[idx - 1];
-                const prevDay = prevMsg?.createdAt?.toDate?.()?.toLocaleDateString('es-ES');
                 const thisDay = msg.createdAt?.toDate?.()?.toLocaleDateString('es-ES');
+                const prevDay = prevMsg?.createdAt?.toDate?.()?.toLocaleDateString('es-ES');
                 const showDate = !prevMsg || prevDay !== thisDay;
                 return (
                   <div key={msg.id}>
@@ -286,7 +302,7 @@ export default function Messages() {
                       </div>
                     )}
                     <div className={`flex gap-2 items-end ${isMine ? 'flex-row-reverse' : ''}`}>
-                      {!isMine && <Avatar username={msg.senderUsername} avatar_url={activeOtherAvatar} size="w-7 h-7" />}
+                      {!isMine && <Avatar username={activeOther?.username} avatar_url={activeOther?.avatar} size="w-7 h-7" />}
                       <div className={`max-w-[72%] flex flex-col gap-0.5 ${isMine ? 'items-end' : 'items-start'}`}>
                         <div className={`px-4 py-2.5 rounded-2xl text-sm leading-snug break-words ${
                           isMine ? 'bg-orange-500 text-white rounded-br-sm' : 'bg-white text-gray-900 border border-gray-200 shadow-sm rounded-bl-sm'
@@ -299,14 +315,15 @@ export default function Messages() {
               })}
             </div>
 
+            {/* Input bar */}
             <div className="px-4 py-3.5 border-t border-gray-200 bg-white shrink-0">
               <div className="flex gap-2 items-center">
                 <input
                   ref={inputRef}
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  onKeyDown={handleKey}
-                  placeholder={`Mensaje a ${activeOtherUsername}…`}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                  placeholder={`Mensaje a ${activeOther?.username}…`}
                   maxLength={1000}
                   className="flex-1 bg-gray-100 rounded-2xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 placeholder:text-gray-400"
                 />

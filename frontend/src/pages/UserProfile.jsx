@@ -5,6 +5,11 @@ import { getUserProfileByUsername, equipReward, updateUserProfile, checkIsFollow
 import { getFavorites } from '../services/favoritesService';
 import { getWatchlist } from '../services/watchlistService';
 
+/* ─── safe context wrappers (allow rendering outside Router/Auth, e.g. mock preview) ── */
+const _useNavigate = typeof useNavigate !== 'undefined' ? useNavigate : () => () => {};
+const _useParams   = typeof useParams   !== 'undefined' ? useParams   : () => ({});
+const _useAuth     = typeof useAuth     !== 'undefined' ? useAuth     : () => ({ profile: null, setProfile: () => {}, firebaseUser: null });
+
 /* ─── utils ────────────────────────────────────────────────────────────────── */
 const cls = (...xs) => xs.filter(Boolean).join(' ');
 const fmt = (n) => (n ?? 0).toLocaleString('es-ES');
@@ -241,7 +246,7 @@ const QuickStat = ({ icon, label, value, accent = 'text-orange-600', tone = 'bg-
 
 /* ─── Anime card + carousel ─────────────────────────────────────────────────── */
 const AnimeCard = ({ anime }) => {
-  const navigate = useNavigate();
+  const navigate = _useNavigate();
   return (
     <button onClick={() => navigate(`/anime/${anime.id}`)} className="group block w-[148px] shrink-0 text-left">
       <div className="relative aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-slate-200/70 bg-slate-100">
@@ -299,7 +304,7 @@ const FavoritesSection = ({ favorites = [] }) => (
 );
 
 const WatchlistSection = ({ watchlist = [] }) => {
-  const navigate = useNavigate();
+  const navigate = _useNavigate();
   return (
     <Card>
       <SectionHeader icon={<Svg path={ICON.eye} className="size-3.5" />} title="Mi Watchlist"
@@ -320,7 +325,7 @@ const WatchlistSection = ({ watchlist = [] }) => {
 
 /* ─── Genres ────────────────────────────────────────────────────────────────── */
 const GenresSection = ({ genres = [] }) => {
-  const navigate = useNavigate();
+  const navigate = _useNavigate();
   return (
     <Card>
       <SectionHeader icon={<Svg path={ICON.layers} className="size-3.5" />} title="Géneros de Interés"
@@ -347,7 +352,7 @@ const GenresSection = ({ genres = [] }) => {
 
 /* ─── Featured + Mini dashboard ─────────────────────────────────────────────── */
 const FeaturedAnimeBlock = ({ anime }) => {
-  const navigate = useNavigate();
+  const navigate = _useNavigate();
   if (!anime) return null;
   return (
     <div className="relative overflow-hidden rounded-2xl ring-1 ring-slate-900/5 bg-slate-900">
@@ -662,24 +667,52 @@ const RewardsCard = ({ profile, stats, isOwner, onEquip }) => {
   );
 };
 
-/* ─── Page component (data fetching) ────────────────────────────────────────── */
-const UserProfile = () => {
-  const navigate = useNavigate();
-  const { username } = useParams();
-  const { profile: authProfile, setProfile: setAuthProfile } = useAuth();
+/* ─── Page component ────────────────────────────────────────────────────────── */
+/*
+ * Accepts optional data props so the component can be rendered prop-driven
+ * (e.g. in a mock/preview harness).  When props are absent it fetches its own
+ * data from Firestore exactly as before.
+ *
+ * Props mirrored from the preview harness:
+ *   profile, favorites, stats, watchlist, isOwner, topGenres,
+ *   followers, following, achievements, showFillBlock
+ */
+const UserProfile = ({
+  profile:      propProfile      = null,
+  favorites:    propFavorites    = null,
+  stats:        propStats        = null,
+  watchlist:    propWatchlist    = null,
+  isOwner:      propIsOwner      = null,
+  topGenres:    propTopGenres    = null,
+  followers:    propFollowers    = null,
+  following:    propFollowing    = null,
+  achievements: propAchievements = null,
+  showFillBlock = true,
+}) => {
+  const navigate = _useNavigate();
+  const { username } = _useParams();
+  const { profile: authProfile, setProfile: setAuthProfile } = _useAuth();
 
-  const [profile, setProfile]           = useState(null);
+  const isPropDriven = propProfile !== null;
+
+  const [_profile,     set_Profile]     = useState(isPropDriven ? propProfile : null);
   const [rawFavorites, setRawFavorites] = useState([]);
   const [rawWatchlist, setRawWatchlist] = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [isEditing, setIsEditing]       = useState(false);
-  const [editData, setEditData]         = useState({ avatar_url: '', banner_url: '', bio: '', location: '' });
-  const [isSaving, setIsSaving]         = useState(false);
-  const [isFollowing, setIsFollowing]   = useState(false);
+  const [loading,      setLoading]      = useState(!isPropDriven);
+  const [isEditing,    setIsEditing]    = useState(false);
+  const [editData,     setEditData]     = useState({ avatar_url: '', banner_url: '', bio: '', location: '' });
+  const [isSaving,     setIsSaving]     = useState(false);
+  const [isFollowing,  setIsFollowing]  = useState(false);
 
-  const isOwner = !username || (authProfile && profile?.username === authProfile?.username);
+  // Sync profile when prop changes (e.g. tweaks panel switches mode)
+  useEffect(() => { if (isPropDriven) set_Profile(propProfile); }, [propProfile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isOwner = propIsOwner !== null
+    ? propIsOwner
+    : (!username || (authProfile && _profile?.username === authProfile?.username));
 
   useEffect(() => {
+    if (isPropDriven) return;
     window.scrollTo(0, 0);
     document.documentElement.classList.remove('dark');
     const fetchData = async () => {
@@ -691,16 +724,14 @@ const UserProfile = () => {
         } else if (authProfile) {
           profileData = authProfile;
         }
-
         if (profileData) {
-          setProfile(profileData);
+          set_Profile(profileData);
           setEditData({
             avatar_url: profileData.avatar_url || '',
             banner_url: profileData.banner_url || '',
             bio: profileData.bio || '',
             location: profileData.location || '',
           });
-
           const uid = profileData.uid;
           if (uid) {
             const [favsData, wlData] = await Promise.allSettled([
@@ -714,14 +745,11 @@ const UserProfile = () => {
             }
           }
         }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
     };
     fetchData();
-  }, [username, authProfile?.uid]);
+  }, [username, authProfile?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── data mapping ── */
   const mapAnime = (a) => ({
@@ -733,14 +761,23 @@ const UserProfile = () => {
     genres: a.genres || [],
   });
 
-  const favorites = useMemo(() => rawFavorites.map(mapAnime), [rawFavorites]);
-  const watchlist = useMemo(() => rawWatchlist.map(mapAnime), [rawWatchlist]);
+  // When prop-driven the arrays are already in display format; otherwise map from raw Firestore docs
+  const profile   = isPropDriven ? propProfile  : _profile;
+  const favorites = useMemo(() => propFavorites ?? rawFavorites.map(mapAnime), [propFavorites, rawFavorites]); // eslint-disable-line react-hooks/exhaustive-deps
+  const watchlist = useMemo(() => propWatchlist ?? rawWatchlist.map(mapAnime), [propWatchlist, rawWatchlist]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const topGenres = useMemo(() => {
+    if (propTopGenres) return propTopGenres;
     const counts = {};
     favorites.forEach(f => (f.genres || []).forEach(g => { counts[g] = (counts[g] || 0) + 1; }));
     return Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-  }, [favorites]);
+  }, [propTopGenres, favorites]);
+
+  const achievements  = propAchievements ?? [];
+  const earned        = achievements.filter(a => a.unlocked).length;
+  const stats         = propStats ?? profile?.stats ?? { episodes_watched: 0, manga_chapters: 0, comments: 0 };
+  const followersVal  = propFollowers  !== null ? propFollowers  : (profile?.followers_count ?? 0);
+  const followingVal  = propFollowing  !== null ? propFollowing  : (profile?.following_count ?? 0);
 
   /* ── handlers ── */
   const handleSave = async () => {
@@ -748,7 +785,7 @@ const UserProfile = () => {
     setIsSaving(true);
     try {
       await updateUserProfile(authProfile.uid, editData);
-      setProfile(prev => ({ ...prev, ...editData }));
+      set_Profile(prev => ({ ...prev, ...editData }));
       setAuthProfile(prev => ({ ...prev, ...editData }));
       setIsEditing(false);
     } catch { alert('Error al guardar.'); }
@@ -759,11 +796,9 @@ const UserProfile = () => {
     if (!authProfile?.uid) return;
     try {
       const updates = await equipReward(authProfile.uid, reward.type, reward.key, reward.image || '');
-      setProfile(prev => ({ ...prev, ...updates }));
+      set_Profile(prev => ({ ...prev, ...updates }));
       setAuthProfile(prev => ({ ...prev, ...updates }));
-    } catch (err) {
-      alert(err.message || 'Error al equipar');
-    }
+    } catch (err) { alert(err.message || 'Error al equipar'); }
   };
 
   const handleFollow = async () => {
@@ -772,15 +807,13 @@ const UserProfile = () => {
       if (isFollowing) {
         await unfollowUser(authProfile.uid, profile.uid);
         setIsFollowing(false);
-        setProfile(prev => ({ ...prev, followers_count: Math.max(0, (prev?.followers_count ?? 0) - 1) }));
+        set_Profile(prev => ({ ...prev, followers_count: Math.max(0, (prev?.followers_count ?? 0) - 1) }));
       } else {
         await followUser(authProfile.uid, profile.uid);
         setIsFollowing(true);
-        setProfile(prev => ({ ...prev, followers_count: (prev?.followers_count ?? 0) + 1 }));
+        set_Profile(prev => ({ ...prev, followers_count: (prev?.followers_count ?? 0) + 1 }));
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   if (loading) return (
@@ -788,10 +821,6 @@ const UserProfile = () => {
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" />
     </div>
   );
-
-  const achievements = [];
-  const earned = 0;
-  const stats = profile?.stats || { episodes_watched: 0, manga_chapters: 0, comments: 0 };
 
   return (
     <div className="min-h-screen bg-[#f6faff] text-slate-800 antialiased">
@@ -809,9 +838,9 @@ const UserProfile = () => {
         />
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <QuickStat icon={ICON.users}    label="Seguidores" value={fmt(profile?.followers_count)} tone="bg-rose-50"   accent="text-rose-600" />
-          <QuickStat icon={ICON.userPlus} label="Siguiendo"  value={fmt(profile?.following_count)} tone="bg-violet-50" accent="text-violet-600" />
-          <QuickStat icon={ICON.bolt}     label="Puntos XP"  value={fmt(profile?.points)}          tone="bg-orange-50" accent="text-orange-600" />
+          <QuickStat icon={ICON.users}    label="Seguidores" value={fmt(followersVal)}    tone="bg-rose-50"   accent="text-rose-600" />
+          <QuickStat icon={ICON.userPlus} label="Siguiendo"  value={fmt(followingVal)}    tone="bg-violet-50" accent="text-violet-600" />
+          <QuickStat icon={ICON.bolt}     label="Puntos XP"  value={fmt(profile?.points)} tone="bg-orange-50" accent="text-orange-600" />
           <QuickStat icon={ICON.trophy}   label="Logros"     value={`${earned}/${achievements.length}`} tone="bg-amber-50" accent="text-amber-600" />
         </div>
 
@@ -820,7 +849,7 @@ const UserProfile = () => {
           <div className="lg:col-span-8 space-y-5">
             <FavoritesSection favorites={favorites} />
             <GenresSection genres={topGenres} />
-            <FeaturedDashboardSection favorites={favorites} stats={stats} profile={profile} />
+            {showFillBlock && <FeaturedDashboardSection favorites={favorites} stats={stats} profile={profile} />}
             {isOwner && watchlist.length > 0 && <WatchlistSection watchlist={watchlist} />}
           </div>
 

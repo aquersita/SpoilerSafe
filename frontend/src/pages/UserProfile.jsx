@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getUserProfileByUsername, equipReward } from '../services/userService';
-import { updateUserProfile } from '../services/userService';
+import { getUserProfileByUsername, equipReward, updateUserProfile, checkIsFollowing, followUser, unfollowUser } from '../services/userService';
 import { getFavorites } from '../services/favoritesService';
 import { getWatchlist } from '../services/watchlistService';
 
@@ -603,48 +602,61 @@ const RewardsCard = ({ profile, stats, isOwner, onEquip }) => {
     return false;
   };
 
+  const categories = [
+    { label: 'Marcos',     type: 'frame' },
+    { label: 'Emoticonos', type: 'emoji' },
+    { label: 'Banners',    type: 'banner' },
+  ];
+
   return (
     <Card>
       <SectionHeader icon={<Svg path={ICON.trophy} className="size-3.5" />} title="Recompensas" />
-      <div className="space-y-1.5">
-        {REWARDS.map((r) => {
-          const unlocked = isUnlocked(r);
-          const equipped = isEquipped(r);
-          return (
-            <div key={r.key} className={cls(
-              'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
-              equipped ? 'border-orange-300 bg-orange-50/60' :
-              unlocked ? 'border-slate-200 bg-white hover:border-orange-200' :
-              'border-slate-100 bg-slate-50/50 opacity-60'
-            )}>
-              <div className="size-8 rounded-lg shrink-0 flex items-center justify-center text-lg overflow-hidden"
-                style={{ background: r.preview_color || '#f0f0f0' }}>
-                {r.type === 'emoji' ? r.emoji : null}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-bold text-slate-800 truncate">{r.name}</p>
-                <p className="text-[10px] text-slate-500">{r.description}</p>
-              </div>
-              {isOwner && unlocked && (
-                <button
-                  onClick={() => onEquip(r)}
-                  disabled={equipped}
-                  className={cls(
-                    'shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all',
-                    equipped
-                      ? 'bg-orange-500 text-white cursor-default'
-                      : 'bg-slate-100 text-slate-600 hover:bg-orange-100 hover:text-orange-700'
-                  )}
-                >
-                  {equipped ? 'Equipado' : 'Equipar'}
-                </button>
-              )}
-              {!unlocked && (
-                <span className="shrink-0"><Svg path={ICON.lock} className="size-3.5 text-slate-400" /></span>
-              )}
+      <div className="max-h-96 overflow-y-auto space-y-4 pr-0.5 [scrollbar-width:thin] [scrollbar-color:#e2e8f0_transparent]">
+        {categories.map(({ label, type }) => (
+          <div key={type}>
+            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 mb-2 px-0.5">{label}</div>
+            <div className="space-y-1.5">
+              {REWARDS.filter(r => r.type === type).map((r) => {
+                const unlocked = isUnlocked(r);
+                const equipped = isEquipped(r);
+                return (
+                  <div key={r.key} className={cls(
+                    'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
+                    equipped ? 'border-orange-300 bg-orange-50/60' :
+                    unlocked ? 'border-slate-200 bg-white hover:border-orange-200' :
+                    'border-slate-100 bg-slate-50/50 opacity-60'
+                  )}>
+                    <div className="size-8 rounded-lg shrink-0 flex items-center justify-center text-lg overflow-hidden"
+                      style={{ background: r.preview_color || '#f0f0f0' }}>
+                      {r.type === 'emoji' ? r.emoji : null}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-bold text-slate-800 truncate">{r.name}</p>
+                      <p className="text-[10px] text-slate-500">{r.description}</p>
+                    </div>
+                    {isOwner && unlocked && (
+                      <button
+                        onClick={() => onEquip(r)}
+                        disabled={equipped}
+                        className={cls(
+                          'shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all',
+                          equipped
+                            ? 'bg-orange-500 text-white cursor-default'
+                            : 'bg-slate-100 text-slate-600 hover:bg-orange-100 hover:text-orange-700'
+                        )}
+                      >
+                        {equipped ? 'Equipado' : 'Equipar'}
+                      </button>
+                    )}
+                    {!unlocked && (
+                      <span className="shrink-0"><Svg path={ICON.lock} className="size-3.5 text-slate-400" /></span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </Card>
   );
@@ -663,11 +675,13 @@ const UserProfile = () => {
   const [isEditing, setIsEditing]       = useState(false);
   const [editData, setEditData]         = useState({ avatar_url: '', banner_url: '', bio: '', location: '' });
   const [isSaving, setIsSaving]         = useState(false);
+  const [isFollowing, setIsFollowing]   = useState(false);
 
   const isOwner = !username || (authProfile && profile?.username === authProfile?.username);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    document.documentElement.classList.remove('dark');
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -695,6 +709,9 @@ const UserProfile = () => {
             ]);
             if (favsData.status === 'fulfilled') setRawFavorites(favsData.value);
             if (wlData.status === 'fulfilled') setRawWatchlist(wlData.value);
+            if (username && authProfile?.uid && authProfile.uid !== uid) {
+              checkIsFollowing(authProfile.uid, uid).then(setIsFollowing).catch(() => {});
+            }
           }
         }
       } catch (err) {
@@ -749,6 +766,23 @@ const UserProfile = () => {
     }
   };
 
+  const handleFollow = async () => {
+    if (!authProfile?.uid || !profile?.uid) return;
+    try {
+      if (isFollowing) {
+        await unfollowUser(authProfile.uid, profile.uid);
+        setIsFollowing(false);
+        setProfile(prev => ({ ...prev, followers_count: Math.max(0, (prev?.followers_count ?? 0) - 1) }));
+      } else {
+        await followUser(authProfile.uid, profile.uid);
+        setIsFollowing(true);
+        setProfile(prev => ({ ...prev, followers_count: (prev?.followers_count ?? 0) + 1 }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#f6faff]">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" />
@@ -768,9 +802,9 @@ const UserProfile = () => {
           isOwner={isOwner}
           achievementsEarned={earned}
           achievementsTotal={achievements.length}
-          isFollowing={profile?.is_following}
+          isFollowing={isFollowing}
           onEdit={() => setIsEditing(true)}
-          onFollow={() => {}}
+          onFollow={handleFollow}
           onMessage={() => navigate(`/messages/${profile?.username}`)}
         />
 

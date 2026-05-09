@@ -3,7 +3,8 @@ import {
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import {
-  doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, limit, serverTimestamp,
+  doc, getDoc, setDoc, updateDoc, deleteDoc,
+  collection, query, where, getDocs, limit, serverTimestamp, increment,
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
@@ -98,6 +99,23 @@ export async function equipReward(uid, rewardType, rewardKey, imageUrl = '') {
   else if (rewardType === 'emoji') data.active_emoji = rewardKey;
   await updateDoc(doc(db, 'users', uid), data);
   return data;
+}
+
+export async function checkIsFollowing(followerUid, followedUid) {
+  const snap = await getDoc(doc(db, 'users', followerUid, 'following', followedUid));
+  return snap.exists();
+}
+
+export async function followUser(followerUid, followedUid) {
+  await setDoc(doc(db, 'users', followerUid, 'following', followedUid), { followedAt: serverTimestamp() });
+  await updateDoc(doc(db, 'users', followerUid), { following_count: increment(1) });
+  await updateDoc(doc(db, 'users', followedUid), { followers_count: increment(1) });
+}
+
+export async function unfollowUser(followerUid, followedUid) {
+  await deleteDoc(doc(db, 'users', followerUid, 'following', followedUid));
+  await updateDoc(doc(db, 'users', followerUid), { following_count: increment(-1) });
+  await updateDoc(doc(db, 'users', followedUid), { followers_count: increment(-1) });
 }
 
 export { computeLevel };

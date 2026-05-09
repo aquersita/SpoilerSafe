@@ -319,7 +319,7 @@ if (currentUser?.uid) {
 
             {/* Dónde Ver Section */}
             {(() => {
-                const katanime = { site: 'KATANIME', url: `https://katanime.es/buscar?q=${encodeURIComponent(title)}` };
+                const katanime = { site: 'KATANIME', url: `https://katanime.net/buscar?q=${encodeURIComponent(title)}` };
                 const anilistLinks = (anime.externalLinks || []).filter(l => l.site && l.url);
                 const allLinks = [katanime, ...anilistLinks];
                 return (

@@ -1,0 +1,27 @@
+{
+  "functions": [
+    {
+      "source": ".",
+      "codebase": "default",
+      "ignore": [
+        "frontend/**",
+        "node_modules/**",
+        ".git/**",
+        "uploads/**",
+        "*.db",
+        ".env",
+        ".env.*",
+        "firebase-credentials.json",
+        "spoilersafe-*.json",
+        "__pycache__/**",
+        "*.pyc",
+        "*.log",
+        "dist/**",
+        "*.sqlite",
+        "*.sqlite3",
+        "registered_users.txt",
+        "backend.log"
+      ]
+    }
+  ]
+}

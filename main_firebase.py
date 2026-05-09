@@ -31,9 +31,12 @@ import auth  # keep existing auth.py (create_token, decode_token, get_password_h
 load_dotenv()
 
 # ─── Firebase init ─────────────────────────────────────────────────────────────
-_cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH", "firebase-credentials.json")
-_firebase_cred = credentials.Certificate(_cred_path)
-firebase_admin.initialize_app(_firebase_cred)
+if not firebase_admin._apps:
+    _cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH")
+    if _cred_path and os.path.exists(_cred_path):
+        firebase_admin.initialize_app(credentials.Certificate(_cred_path))
+    else:
+        firebase_admin.initialize_app()  # uses built-in service account in Cloud Functions
 db = fs.client()
 
 # ─── Ensure _meta/counters exists ─────────────────────────────────────────────

@@ -43,6 +43,20 @@ const Premium = () => {
             return;
         }
 
+        const [expMonth, expYear] = expiry.split('/').map(Number);
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear() % 100;
+        if (
+            !expMonth || !expYear ||
+            expMonth < 1 || expMonth > 12 ||
+            expYear < currentYear ||
+            (expYear === currentYear && expMonth < currentMonth)
+        ) {
+            toast.error("La fecha de caducidad de la tarjeta no es válida.");
+            return;
+        }
+
         setIsProcessing(true);
 
         // Simulate payment gateway delay
@@ -263,6 +277,7 @@ const Premium = () => {
                                             placeholder="John Doe"
                                             value={cardName}
                                             onChange={(e) => setCardName(e.target.value)}
+                                            maxLength="26"
                                             required
                                             disabled={isProcessing}
                                         />

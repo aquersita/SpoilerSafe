@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { getUserProfileByUsername, equipReward, updateUserProfile, checkIsFollowing, followUser, unfollowUser } from '../services/userService';
 import { getFavorites } from '../services/favoritesService';
 import { getWatchlist } from '../services/watchlistService';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../lib/firebase';
 
 /* ─── safe context wrappers (allow rendering outside Router/Auth, e.g. mock preview) ── */
 const _useNavigate = typeof useNavigate !== 'undefined' ? useNavigate : () => () => {};
@@ -173,7 +175,7 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
                 {profile?.username}
               </h1>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[11px] font-bold uppercase tracking-wider">
-                <Svg path={ICON.shield} filled className="size-3" />{profile?.rank || 'Novato'}
+                <Svg path={ICON.shield} filled className="size-3" />{profile?.is_admin ? 'Admin' : (profile?.rank || 'Novato')}
               </span>
               {profile?.spoilers_safe > 0 && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
@@ -475,7 +477,7 @@ const RankCard = ({ profile }) => {
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-300">Rango</div>
-          <div className="text-xl font-extrabold leading-tight">{profile?.rank || 'Novato'}</div>
+          <div className="text-xl font-extrabold leading-tight">{profile?.is_admin ? 'Administrador' : (profile?.rank || 'Novato')}</div>
           <div className="mt-2 text-[11px] text-white/60">Faltan <b className="text-white/90 tabular-nums">{fmt(remaining)}</b> XP para el siguiente nivel</div>
         </div>
       </div>
@@ -538,47 +540,55 @@ const StatsListCard = ({ stats, profile }) => (
 );
 
 /* ─── Edit modal ────────────────────────────────────────────────────────────── */
-const EditModal = ({ data, onChange, onSave, onClose, saving }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md p-6">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Editar Perfil</h2>
-        <button onClick={onClose} className="grid place-items-center size-8 rounded-lg hover:bg-slate-100 dark:bg-slate-800 text-slate-500">
-          <Svg path={ICON.x} className="size-4" />
-        </button>
-      </div>
-      <div className="space-y-4">
-        {[
-          { key: 'avatar_url', label: 'URL del avatar', placeholder: 'https://...' },
-          { key: 'banner_url', label: 'URL del banner', placeholder: 'https://...' },
-          { key: 'location',   label: 'Ubicación',      placeholder: 'Madrid, España' },
-        ].map(f => (
-          <div key={f.key}>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{f.label}</label>
-            <input value={data[f.key] || ''} onChange={e => onChange(f.key, e.target.value)}
-              placeholder={f.placeholder}
+const EditModal = ({ data, onChange, onSave, onClose, saving }) => {
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [bannerFile, setBannerFile] = useState(null);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Editar Perfil</h2>
+          <button onClick={onClose} className="grid place-items-center size-8 rounded-lg hover:bg-slate-100 dark:bg-slate-800 text-slate-500">
+            <Svg path={ICON.x} className="size-4" />
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Foto de Perfil</label>
+            <input type="file" accept="image/*" onChange={e => setAvatarFile(e.target.files[0])}
+              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Banner</label>
+            <input type="file" accept="image/*" onChange={e => setBannerFile(e.target.files[0])}
+              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Ubicación</label>
+            <input value={data.location || ''} onChange={e => onChange('location', e.target.value)}
+              placeholder="Madrid, España"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400" />
           </div>
-        ))}
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Bio</label>
-          <textarea value={data.bio || ''} onChange={e => onChange('bio', e.target.value)}
-            placeholder="Cuéntanos algo sobre ti…" rows={3}
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Bio</label>
+            <textarea value={data.bio || ''} onChange={e => onChange('bio', e.target.value)}
+              placeholder="Cuéntanos algo sobre ti…" rows={3}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-6 justify-end">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 dark:bg-slate-800">
+            Cancelar
+          </button>
+          <button onClick={() => onSave(avatarFile, bannerFile)} disabled={saving}
+            className="px-6 py-2 text-sm font-semibold text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50">
+            {saving ? 'Guardando…' : 'Guardar'}
+          </button>
         </div>
       </div>
-      <div className="flex gap-2 mt-6 justify-end">
-        <button onClick={onClose} className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 dark:bg-slate-800">
-          Cancelar
-        </button>
-        <button onClick={onSave} disabled={saving}
-          className="px-6 py-2 text-sm font-semibold text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50">
-          {saving ? 'Guardando…' : 'Guardar'}
-        </button>
-      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ─── Rewards ───────────────────────────────────────────────────────────────── */
 // Emoji icons live in /public/rewards/<key>.svg (each is a normalized 48x48 SVG —
@@ -841,15 +851,32 @@ const UserProfile = ({
   const followingVal  = propFollowing  !== null ? propFollowing  : (profile?.following_count ?? 0);
 
   /* ── handlers ── */
-  const handleSave = async () => {
+  const handleSave = async (avatarFile, bannerFile) => {
     if (!authProfile?.uid) return;
     setIsSaving(true);
     try {
-      await updateUserProfile(authProfile.uid, editData);
-      set_Profile(prev => ({ ...prev, ...editData }));
-      setAuthProfile(prev => ({ ...prev, ...editData }));
+      let updatedData = { ...editData };
+
+      if (avatarFile) {
+        const fileRef = ref(storage, `avatars/${authProfile.uid}_${Date.now()}_${avatarFile.name}`);
+        await uploadBytes(fileRef, avatarFile);
+        updatedData.avatar_url = await getDownloadURL(fileRef);
+      }
+
+      if (bannerFile) {
+        const fileRef = ref(storage, `banners/${authProfile.uid}_${Date.now()}_${bannerFile.name}`);
+        await uploadBytes(fileRef, bannerFile);
+        updatedData.banner_url = await getDownloadURL(fileRef);
+      }
+
+      await updateUserProfile(authProfile.uid, updatedData);
+      set_Profile(prev => ({ ...prev, ...updatedData }));
+      setAuthProfile(prev => ({ ...prev, ...updatedData }));
       setIsEditing(false);
-    } catch { alert('Error al guardar.'); }
+    } catch (err) { 
+      console.error(err);
+      alert('Error al guardar.'); 
+    }
     finally { setIsSaving(false); }
   };
 

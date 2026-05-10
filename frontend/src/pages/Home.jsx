@@ -370,7 +370,7 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
                             </button>
                             <button
                                 onClick={() => navigate(`/anime/${slide.id}`)}
-                                className="border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white dark:bg-gray-900/5 hover:bg-white dark:bg-gray-900/15 backdrop-blur-sm transition-all flex items-center gap-2 text-sm"
+                                className="border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white/10 dark:bg-gray-900/5 hover:bg-white/20 dark:hover:bg-gray-900/15 backdrop-blur-sm transition-all flex items-center gap-2 text-sm"
                             >
                                 <span className="material-icons-outlined">info</span>
                                 Más info

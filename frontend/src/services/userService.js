@@ -82,14 +82,20 @@ export async function updateUserProfile(uid, data) {
 }
 
 export async function searchUsers(queryStr) {
+  const lowerQuery = queryStr.toLowerCase();
   const q = query(
-    collection(db, 'users'),
-    where('username', '>=', queryStr),
-    where('username', '<=', queryStr + ''),
+    collection(db, 'usernames'),
+    where('__name__', '>=', lowerQuery),
+    where('__name__', '<=', lowerQuery + ''),
     limit(8)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+  const users = [];
+  for (const d of snap.docs) {
+    const userSnap = await getDoc(doc(db, 'users', d.data().uid));
+    if (userSnap.exists()) users.push({ uid: userSnap.id, ...userSnap.data() });
+  }
+  return users;
 }
 
 export async function equipReward(uid, rewardType, rewardKey, imageUrl = '') {

@@ -45,10 +45,10 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
             }
             try {
                 const [animeRes, usersData] = await Promise.all([
-                    searchAnime(query),
-                    searchUsers(query)
+                    searchAnime(query).catch(e => ({ data: { Page: { media: [] } } })),
+                    searchUsers(query).catch(e => [])
                 ]);
-                setResults(animeRes.data?.Page?.media || []);
+                setResults(animeRes?.data?.Page?.media || []);
                 setUserResults(usersData || []);
                 setShowResults(true);
             } catch (err) {

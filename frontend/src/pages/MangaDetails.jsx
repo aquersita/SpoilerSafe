@@ -231,8 +231,8 @@ const MangaDetails = () => {
 
                             {/* Quick stats */}
                             <div className="flex items-center gap-5 text-xs text-gray-500 pt-1">
-                                <span>{manga.chapters || '?'} capítulos</span>
-                                <span>{manga.volumes || '?'} volúmenes</span>
+                                {manga.chapters ? <span>{manga.chapters} capítulos</span> : <span>Capítulos en emisión</span>}
+                                {manga.volumes ? <span>{manga.volumes} volúmenes</span> : null}
                                 <span className="capitalize">{manga.status?.toLowerCase().replace('_', ' ')}</span>
                             </div>
                         </div>
@@ -248,11 +248,13 @@ const MangaDetails = () => {
                             <span className="w-1 h-6 bg-primary block rounded-full"></span>
                             Mi Progreso de Lectura
                             <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
-                                ({readCount}/{knownChapters ? totalChapters : '?'} capítulos)
+                                {knownChapters
+                                    ? `(${readCount}/${totalChapters} capítulos)`
+                                    : `(${readCount} leídos)`}
                             </span>
                         </h2>
                         <div className="flex items-center gap-3">
-                            {profile?.uid && (readCount < totalChapters) && (
+                            {profile?.uid && knownChapters && (readCount < totalChapters) && (
                                 <button onClick={markAllRead}
                                     className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors shadow-sm">
                                     <span className="material-symbols-outlined text-[18px]">done_all</span>
@@ -271,7 +273,11 @@ const MangaDetails = () => {
                     {/* Progress bar */}
                     <div className="mb-6 bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
-                            <span>{readCount} / {knownChapters ? totalChapters : '?'} capítulos leídos</span>
+                            <span>
+                                {knownChapters
+                                    ? `${readCount} / ${totalChapters} capítulos leídos`
+                                    : `${readCount} capítulos leídos`}
+                            </span>
                             <span className="font-bold text-primary">
                                 {knownChapters ? `${Math.round((readCount / totalChapters) * 100)}%` : `${readCount} leídos`}
                             </span>

@@ -22,9 +22,13 @@ const MANGA_FIELDS = `
 
 export async function getMangaChaptersFromJikan(malId) {
   try {
-    const res = await fetch(`${JIKAN}/manga/${malId}`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`${JIKAN}/manga/${malId}`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
     const data = await res.json();
-    return data?.data?.chapters ?? null;
+    return data?.data?.chapters || null;
   } catch {
     return null;
   }

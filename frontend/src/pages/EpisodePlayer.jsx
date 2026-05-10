@@ -69,6 +69,15 @@ const EpisodePlayer = ({ user }) => {
     };
 
     useEffect(() => {
+        setIsWatched(false);
+        if (currentUser?.uid) {
+            getAnimeProgress(currentUser.uid, id).then(watched => {
+                setIsWatched(watched.includes(parseInt(episodeNumber)));
+            }).catch(() => {});
+        }
+    }, [id, episodeNumber, currentUser?.uid]);
+
+    useEffect(() => {
         window.scrollTo(0, 0);
 
         const fetchAnime = async () => {
@@ -77,12 +86,6 @@ const EpisodePlayer = ({ user }) => {
                 const res = await getAnime(id);
                 const mediaData = res.data.Media;
                 setAnime(mediaData);
-
-                if (currentUser?.uid) {
-                    getAnimeProgress(currentUser.uid, id).then(watched => {
-                        setIsWatched(watched.includes(parseInt(episodeNumber)));
-                    }).catch(() => {});
-                }
 
                 // Save episode to history (scoped per logged-in user)
                 if (currentUser?.uid) {

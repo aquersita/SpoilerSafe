@@ -82,7 +82,7 @@ const ICON = {
 /* ─── atoms ─────────────────────────────────────────────────────────────────── */
 const Card = ({ children, className, padded = true }) => (
   <section className={cls(
-    'rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/60',
+    'rounded-2xl bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50',
     'shadow-[0_1px_0_rgba(15,23,42,0.04),0_10px_30px_-18px_rgba(15,23,42,0.18)]',
     padded && 'p-5', className
   )}>{children}</section>
@@ -93,7 +93,7 @@ const SectionHeader = ({ icon, title, hint, action, className }) => (
     <div className="flex items-center gap-2.5 min-w-0 flex-1">
       <span className="grid place-items-center size-7 rounded-lg bg-orange-50 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 ring-1 ring-orange-100 dark:ring-orange-500/25">{icon}</span>
       <h3 className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight truncate">{title}</h3>
-      {hint != null && <span className="text-[11px] font-semibold text-slate-400 tabular-nums">{hint}</span>}
+      {hint != null && <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 tabular-nums">{hint}</span>}
     </div>
     {action}
   </header>
@@ -114,11 +114,11 @@ const Cover = ({ src, seed = '', alt = '', className, children }) => (
 
 const EmptyState = ({ icon, title, hint }) => (
   <div className="grid place-items-center text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
-    <span className="grid place-items-center size-10 rounded-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700 text-slate-400 mb-2">
+    <span className="grid place-items-center size-10 rounded-xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 text-slate-400 dark:text-slate-500 mb-2">
       <Svg path={icon} className="size-4" />
     </span>
     <div className="text-[13px] font-bold text-slate-700 dark:text-slate-300">{title}</div>
-    {hint && <div className="text-[12px] text-slate-500 mt-0.5 max-w-xs">{hint}</div>}
+    {hint && <div className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-xs">{hint}</div>}
   </div>
 );
 
@@ -234,8 +234,8 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
 };
 
 /* ─── Quick stats ───────────────────────────────────────────────────────────── */
-const QuickStat = ({ icon, label, value, accent = 'text-orange-600', tone = 'bg-orange-50' }) => (
-  <div className="relative flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/60 shadow-[0_1px_0_rgba(15,23,42,0.04)] overflow-hidden">
+const QuickStat = ({ icon, label, value, accent = 'text-orange-600', tone = 'bg-orange-50 dark:bg-orange-500/10' }) => (
+  <div className="relative flex items-center gap-3 p-4 rounded-2xl bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-[0_1px_0_rgba(15,23,42,0.04)] overflow-hidden">
     <span className={cls('grid place-items-center size-10 rounded-xl ring-1 ring-inset ring-current/10', tone, accent)}>
       <Svg path={icon} className="size-5" />
     </span>
@@ -510,7 +510,7 @@ const RankCard = ({ profile }) => {
 const StatsListCard = ({ stats, profile }) => (
   <Card>
     <SectionHeader icon={<Svg path={ICON.layers} className="size-3.5" />} title="Estadísticas" />
-    <ul className="divide-y divide-slate-100 dark:divide-slate-700/50">
+    <ul className="divide-y divide-slate-100">
       {[
         { key: 'episodes_watched', label: 'Episodios vistos', icon: ICON.film },
         { key: 'manga_chapters',   label: 'Capítulos manga',  icon: ICON.book },

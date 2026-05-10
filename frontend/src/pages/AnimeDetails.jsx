@@ -150,6 +150,17 @@ if (currentUser?.uid) {
     const bannerImage = streamingThumb || anime.bannerImage || coverImage;
     const totalEpisodes = anime.episodes || (anime.nextAiringEpisode ? anime.nextAiringEpisode.episode - 1 : 12);
 
+    const handleEpisodeClick = async (epN) => {
+        if (currentUser?.uid && !watchedEps.has(epN)) {
+            try {
+                const res = await markEpisodeWatched(currentUser.uid, id, epN);
+                setWatchedEps(prev => new Set([...prev, epN]));
+                if (res.points_earned) toast.success(`+${res.points_earned} XP`);
+            } catch (e) {}
+        }
+        navigate(`/anime/${id}/episode/${epN}`);
+    };
+
     return (
         <React.Fragment>
             {/* ── HERO ── */}
@@ -217,7 +228,7 @@ if (currentUser?.uid) {
                             <div className="flex items-center gap-3 pt-2 flex-wrap">
                                 {/* Primario */}
                                 <button
-                                    onClick={() => navigate(`/anime/${id}/episode/1`)}
+                                    onClick={() => handleEpisodeClick(1)}
                                     className="flex items-center gap-2 bg-primary hover:bg-orange-500 active:bg-orange-700 text-white font-black py-3 px-7 rounded-lg shadow-lg shadow-primary/40 transition-all hover:scale-105 active:scale-100 text-sm uppercase tracking-wide"
                                 >
                                     <span className="material-icons text-xl">play_arrow</span>
@@ -228,7 +239,7 @@ if (currentUser?.uid) {
                                 {anime.trailer?.id && (
                                     <button
                                         onClick={() => window.open(`https://youtube.com/watch?v=${anime.trailer.id}`, '_blank')}
-                                        className="flex items-center gap-2 border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white dark:bg-gray-900/5 hover:bg-white dark:bg-gray-900/10 backdrop-blur-sm transition-all text-sm uppercase tracking-wide"
+                                        className="flex items-center gap-2 border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white/10 dark:bg-gray-900/5 hover:bg-white/20 dark:hover:bg-gray-900/10 backdrop-blur-sm transition-all text-sm uppercase tracking-wide"
                                     >
                                         <span className="material-icons-outlined">movie</span>
                                         Tráiler
@@ -265,7 +276,7 @@ if (currentUser?.uid) {
                                     className={`p-3 rounded-lg border-2 transition-all hover:scale-105 active:scale-100 ${
                                         isFavorite
                                             ? 'border-rose-400 bg-rose-500/20 text-rose-300 shadow-md shadow-rose-500/20'
-                                            : 'border-white/30 hover:border-rose-400/60 text-white bg-white dark:bg-gray-900/5 hover:bg-rose-500/10'
+                                            : 'border-white/30 hover:border-rose-400/60 text-white bg-white/10 dark:bg-gray-900/5 hover:bg-white/20 dark:hover:bg-rose-500/10'
                                     }`}
                                 >
                                     <span className="material-icons-outlined text-xl">{isFavorite ? 'favorite' : 'favorite_border'}</span>
@@ -301,7 +312,7 @@ if (currentUser?.uid) {
                                     className={`p-3 rounded-lg border-2 transition-all hover:scale-105 active:scale-100 ${
                                         inWatchlist
                                             ? 'border-primary bg-primary/20 text-primary shadow-md shadow-primary/20'
-                                            : 'border-white/30 hover:border-white/60 text-white bg-white dark:bg-gray-900/5 hover:bg-white dark:bg-gray-900/10'
+                                            : 'border-white/30 hover:border-white/60 text-white bg-white/10 dark:bg-gray-900/5 hover:bg-white/20 dark:hover:bg-gray-900/10'
                                     }`}
                                 >
                                     <span className="material-icons-outlined text-xl">{inWatchlist ? 'bookmark' : 'bookmark_border'}</span>
@@ -392,7 +403,7 @@ if (currentUser?.uid) {
                             const epN = i + 1;
                             const watched = watchedEps.has(epN);
                             return (
-                            <div key={i} onClick={() => navigate(`/anime/${id}/episode/${epN}`)}
+                            <div key={i} onClick={() => handleEpisodeClick(epN)}
                                  className={`group cursor-pointer bg-white dark:bg-gray-900 rounded-md overflow-hidden border transition-all flex flex-col ${watched ? 'border-green-300 hover:shadow-lg hover:border-green-400' : 'border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-primary'}`}>
                                 <div className="relative aspect-video bg-gray-800 overflow-hidden">
                                     <img src={bannerImage || coverImage} alt={`Ep ${epN}`}

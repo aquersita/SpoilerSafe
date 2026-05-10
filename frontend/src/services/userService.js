@@ -4,7 +4,7 @@ import {
 } from 'firebase/auth';
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc,
-  collection, query, where, getDocs, limit, serverTimestamp, increment,
+  collection, query, where, getDocs, limit, serverTimestamp, increment, documentId
 } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
@@ -85,8 +85,8 @@ export async function searchUsers(queryStr) {
   const lowerQuery = queryStr.toLowerCase();
   const q = query(
     collection(db, 'usernames'),
-    where('__name__', '>=', lowerQuery),
-    where('__name__', '<=', lowerQuery + ''),
+    where(documentId(), '>=', lowerQuery),
+    where(documentId(), '<=', lowerQuery + ''),
     limit(8)
   );
   const snap = await getDocs(q);

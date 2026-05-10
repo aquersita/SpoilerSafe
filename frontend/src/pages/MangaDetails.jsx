@@ -64,8 +64,9 @@ const MangaDetails = () => {
     };
 
     const markAllRead = async () => {
-        if (!profile?.uid || !manga?.chapters) return;
-        const unread = Array.from({ length: manga.chapters }, (_, i) => i + 1)
+        if (!profile?.uid) return;
+        const targetChapters = manga?.chapters || totalChapters;
+        const unread = Array.from({ length: targetChapters }, (_, i) => i + 1)
             .filter(n => !readChapters.has(n));
         if (unread.length === 0) return;
         let total = 0;

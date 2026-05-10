@@ -87,6 +87,7 @@ const Login = ({ onLogin }) => {
                                 onChange={onChange}
                                 className="w-full bg-gray-50 border border-gray-300 rounded p-3 text-text-main focus:border-primary outline-none transition-colors"
                                 placeholder="Ej. OtakuMaster99"
+                                maxLength="20"
                                 required
                             />
                         </div>

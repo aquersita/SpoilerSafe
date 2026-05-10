@@ -1,4 +1,5 @@
 const ANILIST = 'https://graphql.anilist.co';
+const JIKAN = 'https://api.jikan.moe/v4';
 
 async function gql(query, variables = {}) {
   const res = await fetch(ANILIST, {
@@ -22,8 +23,16 @@ const MANGA_FIELDS = `
 export const getManga = (id) =>
   gql(`query($id:Int){Media(id:$id,type:MANGA){${MANGA_FIELDS}}}`, { id: parseInt(id) });
 
-export const searchManga = (search) =>
-  gql(`query($s:String){Page(perPage:20){media(search:$s,type:MANGA,sort:SEARCH_MATCH){id title{romaji}coverImage{large}averageScore chapters status genres}}}`, { s: search });
+export const searchManga = async (search) => {
+  const res = await fetch(`${JIKAN}/manga?q=${encodeURIComponent(search)}&limit=20&sfw=false`);
+  const jikan = await res.json();
+  const malIds = (jikan.data || []).map(m => m.mal_id).filter(Boolean);
+  if (!malIds.length) return { data: { Page: { media: [] } } };
+  return gql(
+    `query($ids:[Int]){Page(perPage:20){media(idMal_in:$ids,type:MANGA){id title{romaji}coverImage{large}averageScore chapters status genres}}}`,
+    { ids: malIds }
+  );
+};
 
 export const getTrendingManga = () =>
   gql(`{Page(perPage:20){media(sort:TRENDING_DESC,type:MANGA){id title{romaji}coverImage{large}averageScore chapters status genres}}}`);

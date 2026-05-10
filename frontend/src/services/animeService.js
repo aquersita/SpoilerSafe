@@ -12,7 +12,14 @@ async function gql(query, variables = {}) {
 
 async function jikanSearch(type, query, page = 1, limit = 24) {
   const res = await fetch(`${JIKAN}/${type}?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}&sfw=false`);
-  return res.json();
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Jikan sometimes embeds unescaped control chars in synopsis strings;
+    // replacing them with spaces keeps the structure valid for our use (we only read mal_id).
+    return JSON.parse(text.replace(/[\x00-\x1F\x7F]/g, ' '));
+  }
 }
 
 const MEDIA_FIELDS = `

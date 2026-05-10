@@ -25,7 +25,13 @@ export const getManga = (id) =>
 
 export const searchManga = async (search) => {
   const res = await fetch(`${JIKAN}/manga?q=${encodeURIComponent(search)}&limit=20&sfw=false`);
-  const jikan = await res.json();
+  const text = await res.text();
+  let jikan;
+  try {
+    jikan = JSON.parse(text);
+  } catch {
+    jikan = JSON.parse(text.replace(/[\x00-\x1F\x7F]/g, ' '));
+  }
   const malIds = (jikan.data || []).map(m => m.mal_id).filter(Boolean);
   if (!malIds.length) return { data: { Page: { media: [] } } };
   return gql(

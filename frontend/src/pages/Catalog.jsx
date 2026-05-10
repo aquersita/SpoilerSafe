@@ -53,6 +53,7 @@ const Catalog = () => {
             }
         } catch (error) {
             console.error("Error fetching catalog:", error);
+            if (!append) setAnimes([]);
         } finally {
             setLoading(false);
             setLoadingMore(false);

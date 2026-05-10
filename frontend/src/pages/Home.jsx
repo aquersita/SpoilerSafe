@@ -194,14 +194,14 @@ const AnimeRow = ({ title, icon, items, animeImages = {} }) => {
                 <div className="flex items-center gap-2 mb-4">
                     <span className="w-1 h-6 bg-primary block rounded-full flex-shrink-0" />
                     <span className="material-symbols-outlined text-primary text-xl">{icon}</span>
-                    <h2 className="text-xl md:text-2xl font-black text-gray-800" style={{ fontFamily: "'Arial Black', sans-serif" }}>
+                    <h2 className="text-xl md:text-2xl font-black text-gray-800 dark:text-gray-200" style={{ fontFamily: "'Arial Black', sans-serif" }}>
                         {title}
                     </h2>
                 </div>
                 <div className="relative group">
                     <button
                         onClick={() => scroll(-1)}
-                        className="absolute left-0 top-[40%] -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2"
+                        className="absolute left-0 top-[40%] -translate-y-1/2 z-10 bg-white dark:bg-gray-900/90 dark:bg-gray-900/90 hover:bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-full shadow-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2"
                     >
                         <span className="material-icons">chevron_left</span>
                     </button>
@@ -212,7 +212,7 @@ const AnimeRow = ({ title, icon, items, animeImages = {} }) => {
                                 onClick={() => navigate(`/anime/${a.id}`)}
                                 className="flex-none w-[130px] sm:w-[145px] cursor-pointer group/card"
                             >
-                                <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-200 shadow-sm mb-1.5">
+                                <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 shadow-sm mb-1.5">
                                     {animeImages[a.id] && (
                                         <img
                                             src={animeImages[a.id]}
@@ -224,13 +224,13 @@ const AnimeRow = ({ title, icon, items, animeImages = {} }) => {
                                         <span className="material-icons text-white text-3xl opacity-0 group-hover/card:opacity-100 transition-opacity drop-shadow-lg">play_arrow</span>
                                     </div>
                                 </div>
-                                <h3 className="text-xs font-bold text-gray-800 line-clamp-2 group-hover/card:text-primary transition-colors leading-tight">{a.title}</h3>
+                                <h3 className="text-xs font-bold text-gray-800 dark:text-gray-200 line-clamp-2 group-hover/card:text-primary transition-colors leading-tight">{a.title}</h3>
                             </div>
                         ))}
                     </div>
                     <button
                         onClick={() => scroll(1)}
-                        className="absolute right-0 top-[40%] -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2"
+                        className="absolute right-0 top-[40%] -translate-y-1/2 z-10 bg-white dark:bg-gray-900/90 dark:bg-gray-900/90 hover:bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-full shadow-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2"
                     >
                         <span className="material-icons">chevron_right</span>
                     </button>
@@ -370,7 +370,7 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
                             </button>
                             <button
                                 onClick={() => navigate(`/anime/${slide.id}`)}
-                                className="border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white/5 hover:bg-white/15 backdrop-blur-sm transition-all flex items-center gap-2 text-sm"
+                                className="border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white dark:bg-gray-900/5 hover:bg-white dark:bg-gray-900/15 backdrop-blur-sm transition-all flex items-center gap-2 text-sm"
                             >
                                 <span className="material-icons-outlined">info</span>
                                 Más info
@@ -385,17 +385,17 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
                         <button
                             key={i}
                             onClick={() => goToSlide(i)}
-                            className={`rounded-full transition-all duration-300 ${i === heroIndex ? 'bg-primary w-6 h-2' : 'bg-white/40 hover:bg-white/70 w-2 h-2'}`}
+                            className={`rounded-full transition-all duration-300 ${i === heroIndex ? 'bg-primary w-6 h-2' : 'bg-white dark:bg-gray-900/40 hover:bg-white dark:bg-gray-900/70 w-2 h-2'}`}
                         />
                     ))}
                 </div>
             </section>
 
             {/* ── NOVEDADES ── */}
-            <section className="py-8 bg-white relative z-20 -mt-20 lg:-mt-32">
+            <section className="py-8 bg-white dark:bg-gray-900 relative z-20 -mt-20 lg:-mt-32">
                 <div className="max-w-[1600px] mx-auto px-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl md:text-3xl font-black text-gray-800 flex items-center gap-2 tracking-tight" style={{ fontFamily: "'Arial Black', sans-serif" }}>
+                        <h2 className="text-2xl md:text-3xl font-black text-gray-800 dark:text-gray-200 flex items-center gap-2 tracking-tight" style={{ fontFamily: "'Arial Black', sans-serif" }}>
                             <span className="w-1 h-7 bg-primary block rounded-full" />
                             Novedades de la Temporada
                         </h2>
@@ -410,14 +410,14 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
                             { id: 153518, title: 'Dungeon Meshi',  genres: 'Fantasía, Cocina',        badge: null,      badgeColor: null, hideMobile: true },
                         ].map(a => (
                             <div key={a.id} onClick={() => navigate(`/anime/${a.id}`)} className={`group cursor-pointer ${a.hideMobile ? 'hidden lg:block' : ''}`}>
-                                <div className="relative overflow-hidden rounded-md shadow-md aspect-[2/3] bg-gray-200">
+                                <div className="relative overflow-hidden rounded-md shadow-md aspect-[2/3] bg-gray-200 dark:bg-gray-700">
                                     {animeImages[a.id] && (
                                         <img alt={a.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" src={animeImages[a.id]} />
                                     )}
                                     {a.badge && <div className={`absolute top-2 left-2 ${a.badgeColor} text-white text-[10px] font-bold px-2 py-0.5 rounded shadow`}>{a.badge}</div>}
                                 </div>
-                                <h3 className="font-bold text-gray-800 mt-2 truncate group-hover:text-primary transition-colors">{a.title}</h3>
-                                <p className="text-xs text-gray-500">{a.genres}</p>
+                                <h3 className="font-bold text-gray-800 dark:text-gray-200 mt-2 truncate group-hover:text-primary transition-colors">{a.title}</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{a.genres}</p>
                             </div>
                         ))}
                     </div>
@@ -425,16 +425,16 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
             </section>
 
             {/* ── DESTACADOS ── */}
-            <section className="py-8 bg-gray-50 border-t border-gray-100">
+            <section className="py-8 bg-gray-50 dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800">
                 <div className="max-w-[1600px] mx-auto px-6">
-                    <h2 className="text-2xl md:text-3xl font-black text-gray-800 flex items-center gap-2 tracking-tight mb-4" style={{ fontFamily: "'Arial Black', sans-serif" }}>
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-800 dark:text-gray-200 flex items-center gap-2 tracking-tight mb-4" style={{ fontFamily: "'Arial Black', sans-serif" }}>
                         <span className="w-1 h-7 bg-primary block rounded-full" />
                         Destacados para ti
                     </h2>
                     <div className="relative group">
                         <button
                             onClick={() => scrollDestacados(-1)}
-                            className="absolute left-0 top-[40%] -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2"
+                            className="absolute left-0 top-[40%] -translate-y-1/2 z-10 bg-white dark:bg-gray-900/90 dark:bg-gray-900/90 hover:bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-full shadow-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2"
                         >
                             <span className="material-icons">chevron_left</span>
                         </button>
@@ -452,7 +452,7 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
                                 { id: 9253,   title: 'Steins;Gate' },
                             ].map(a => (
                                 <div key={a.id} onClick={() => navigate(`/anime/${a.id}`)} className="flex-none w-[130px] sm:w-[145px] cursor-pointer group/card">
-                                    <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-200 shadow-sm mb-1.5">
+                                    <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 shadow-sm mb-1.5">
                                         {animeImages[a.id] && (
                                             <img alt={a.title} src={animeImages[a.id]} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300" />
                                         )}
@@ -460,13 +460,13 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
                                             <span className="material-icons text-white text-3xl opacity-0 group-hover/card:opacity-100 transition-opacity drop-shadow-lg">play_arrow</span>
                                         </div>
                                     </div>
-                                    <h3 className="text-xs font-bold text-gray-800 line-clamp-2 group-hover/card:text-primary transition-colors leading-tight">{a.title}</h3>
+                                    <h3 className="text-xs font-bold text-gray-800 dark:text-gray-200 line-clamp-2 group-hover/card:text-primary transition-colors leading-tight">{a.title}</h3>
                                 </div>
                             ))}
                         </div>
                         <button
                             onClick={() => scrollDestacados(1)}
-                            className="absolute right-0 top-[40%] -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 rounded-full shadow-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2"
+                            className="absolute right-0 top-[40%] -translate-y-1/2 z-10 bg-white dark:bg-gray-900/90 dark:bg-gray-900/90 hover:bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 rounded-full shadow-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2"
                         >
                             <span className="material-icons">chevron_right</span>
                         </button>
@@ -475,9 +475,9 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
             </section>
 
             {/* ── TOP 10 ── */}
-            <section className="py-12 bg-white border-t border-gray-100">
+            <section className="py-12 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
                 <div className="max-w-[1600px] mx-auto px-6">
-                    <h2 className="text-2xl md:text-3xl font-black text-gray-800 flex items-center gap-2 mb-8 tracking-tight" style={{ fontFamily: "'Arial Black', sans-serif" }}>
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-8 tracking-tight" style={{ fontFamily: "'Arial Black', sans-serif" }}>
                         <span className="w-1 h-7 bg-primary block rounded-full" />
                         Top 10 Animes más vistos hoy
                     </h2>
@@ -497,7 +497,7 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
                             <div key={anime.id} onClick={() => navigate(`/anime/${anime.id}`)} className="flex-none relative group cursor-pointer pr-4">
                                 <span className={`absolute ${idx === 9 ? '-left-12' : '-left-8'} -bottom-4 text-[130px] font-black text-white leading-none z-0 drop-shadow-lg pointer-events-none`}
                                     style={{ WebkitTextStroke: '4px #888' }}>{idx + 1}</span>
-                                <div className="w-[140px] aspect-[2/3] rounded-md overflow-hidden shadow-lg z-10 relative transform group-hover:scale-105 transition-transform duration-300 bg-gray-200 ml-6">
+                                <div className="w-[140px] aspect-[2/3] rounded-md overflow-hidden shadow-lg z-10 relative transform group-hover:scale-105 transition-transform duration-300 bg-gray-200 dark:bg-gray-700 ml-6">
                                     {animeImages[anime.id] && (
                                         <img alt={anime.title} className="w-full h-full object-cover" src={animeImages[anime.id]} />
                                     )}
@@ -509,7 +509,7 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
             </section>
 
             {/* ── FILAS POR GÉNERO ── */}
-            <div className="bg-white border-t border-gray-100 divide-y divide-gray-100">
+            <div className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-100">
                 {GENRE_ROWS.map(row => (
                     <AnimeRow key={row.title} title={row.title} icon={row.icon} items={row.items} animeImages={animeImages} />
                 ))}

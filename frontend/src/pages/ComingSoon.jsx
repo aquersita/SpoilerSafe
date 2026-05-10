@@ -5,7 +5,7 @@ const ComingSoon = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-[85vh] bg-background-light flex items-center justify-center relative overflow-hidden">
+        <div className="min-h-[85vh] bg-white dark:bg-gray-950 flex items-center justify-center relative overflow-hidden">
             {/* Background Image Overlay */}
             <div className="absolute inset-0 z-0">
                 <img
@@ -21,11 +21,11 @@ const ComingSoon = () => {
                     <span className="material-icons-outlined text-7xl md:text-8xl drop-shadow-lg">construction</span>
                 </div>
 
-                <h1 className="text-4xl md:text-6xl font-black text-gray-800 tracking-tighter mb-4 drop-shadow-sm" style={{ fontFamily: "'Arial Black', sans-serif" }}>
+                <h1 className="text-4xl md:text-6xl font-black text-gray-800 dark:text-gray-200 tracking-tighter mb-4 drop-shadow-sm" style={{ fontFamily: "'Arial Black', sans-serif" }}>
                     PRÓXIMAMENTE
                 </h1>
 
-                <p className="text-lg md:text-xl text-gray-600 font-medium mb-8 leading-relaxed">
+                <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 font-medium mb-8 leading-relaxed">
                     Nuestros desarrolladores están forjando esta sección con el poder del anime.
                     <br className="hidden md:block" /> ¡Vuelve pronto para descubrir contenido épico!
                 </p>
@@ -33,7 +33,7 @@ const ComingSoon = () => {
                 <div className="flex gap-4">
                     <button
                         onClick={() => navigate(-1)}
-                        className="bg-white border-2 border-primary text-primary hover:bg-orange-50 active:bg-orange-100 font-bold py-3 px-8 rounded-sm transition-colors focus:outline-none flex items-center gap-2 uppercase tracking-wide shadow-sm"
+                        className="bg-white dark:bg-gray-900 border-2 border-primary text-primary hover:bg-orange-50 active:bg-orange-100 font-bold py-3 px-8 rounded-sm transition-colors focus:outline-none flex items-center gap-2 uppercase tracking-wide shadow-sm"
                     >
                         <span className="material-icons text-xl">arrow_back</span>
                         Volver Atrás

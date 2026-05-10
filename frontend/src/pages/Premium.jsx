@@ -75,37 +75,37 @@ const Premium = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background-light py-12 px-4 sm:px-6 lg:px-8 font-display relative overflow-hidden">
+        <div className="min-h-screen bg-white dark:bg-gray-950 py-12 px-4 sm:px-6 lg:px-8 font-display relative overflow-hidden">
             {/* Background Decorations */}
             <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-orange-100 to-transparent opacity-50 pointer-events-none"></div>
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary rounded-full blur-3xl opacity-10 pointer-events-none"></div>
             
             <div className="max-w-7xl mx-auto relative z-10">
                 <div className="text-center mb-16 animate-fade-in-up">
-                    <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">
+                    <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
                         Eleva tu experiencia Anime al <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-500">Nivel Dios</span>
                     </h1>
-                    <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                    <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
                         Únete a SpoilerSafe Premium y disfruta de tu pasión sin límites, sin anuncios y con ventajas explosivas en la comunidad.
                     </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                     {/* Plan Gratuito */}
-                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 transform transition duration-500 hover:-translate-y-2 opacity-90">
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800 transform transition duration-500 hover:-translate-y-2 opacity-90">
                         <h3 className="text-2xl font-bold text-slate-400 mb-2">Plan Base</h3>
-                        <div className="text-4xl font-black text-slate-900 mb-6">Gratis <span className="text-lg text-slate-500 font-normal">/para siempre</span></div>
+                        <div className="text-4xl font-black text-slate-900 dark:text-white mb-6">Gratis <span className="text-lg text-slate-500 dark:text-slate-400 font-normal">/para siempre</span></div>
                         
                         <ul className="space-y-4 mb-8">
-                            <li className="flex items-center text-slate-600">
+                            <li className="flex items-center text-slate-600 dark:text-slate-400">
                                 <span className="material-symbols-outlined text-green-500 mr-3">check_circle</span>
                                 Acceso al catálogo completo
                             </li>
-                            <li className="flex items-center text-slate-600">
+                            <li className="flex items-center text-slate-600 dark:text-slate-400">
                                 <span className="material-symbols-outlined text-green-500 mr-3">check_circle</span>
                                 Comentarios y comunidad
                             </li>
-                            <li className="flex items-center text-slate-600">
+                            <li className="flex items-center text-slate-600 dark:text-slate-400">
                                 <span className="material-symbols-outlined text-green-500 mr-3">check_circle</span>
                                 Calidad 1080p
                             </li>
@@ -118,7 +118,7 @@ const Premium = () => {
                                 Sin descargas offline
                             </li>
                         </ul>
-                        <button className="w-full py-4 rounded-xl font-bold text-slate-500 bg-slate-100 cursor-not-allowed">
+                        <button className="w-full py-4 rounded-xl font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 cursor-not-allowed">
                             Tu plan actual
                         </button>
                     </div>
@@ -163,12 +163,12 @@ const Premium = () => {
                         ) : (
                             <button 
                                 onClick={handleSubscribe}
-                                className="w-full py-4 rounded-xl font-bold text-slate-900 bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 shadow-lg shadow-orange-500/30 transition-all transform hover:scale-105 active:scale-95"
+                                className="w-full py-4 rounded-xl font-bold text-slate-900 dark:text-white bg-gradient-to-r from-orange-400 to-yellow-500 hover:from-orange-500 hover:to-yellow-600 shadow-lg shadow-orange-500/30 transition-all transform hover:scale-105 active:scale-95"
                             >
                                 Pagar con Tarjeta Segura
                             </button>
                         )}
-                        <p className="text-center text-slate-500 text-sm mt-4">Cancela en cualquier momento.</p>
+                        <p className="text-center text-slate-500 dark:text-slate-400 text-sm mt-4">Cancela en cualquier momento.</p>
                     </div>
                 </div>
             </div>
@@ -176,11 +176,11 @@ const Premium = () => {
             {/* Modal de Checkout tipo Stripe */}
             {showCheckout && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative">
                         
                         {/* Botón Cerrar */}
                         {!isProcessing && !isSuccess && (
-                            <button onClick={() => setShowCheckout(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10">
+                            <button onClick={() => setShowCheckout(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-400 z-10">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         )}
@@ -190,33 +190,33 @@ const Premium = () => {
                                 <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <span className="material-symbols-outlined text-green-500 text-6xl">check_circle</span>
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-900 mb-2">¡Pago Completado!</h2>
-                                <p className="text-slate-600 mb-6">Bienvenido al club Premium. Redirigiendo a tu perfil...</p>
-                                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2">¡Pago Completado!</h2>
+                                <p className="text-slate-600 dark:text-slate-400 mb-6">Bienvenido al club Premium. Redirigiendo a tu perfil...</p>
+                                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                                     <div className="bg-green-500 h-full animate-[progress_3s_ease-in-out_forwards]"></div>
                                 </div>
                             </div>
                         ) : (
                             <div className="p-8">
-                                <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
+                                <div className="flex items-center gap-3 mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
                                     <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center">
                                         <span className="material-symbols-outlined text-orange-500">diamond</span>
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black text-slate-900">SpoilerSafe Premium</h2>
-                                        <p className="text-slate-500 font-medium">€4.99 / mes</p>
+                                        <h2 className="text-xl font-black text-slate-900 dark:text-white">SpoilerSafe Premium</h2>
+                                        <p className="text-slate-500 dark:text-slate-400 font-medium">€4.99 / mes</p>
                                     </div>
                                 </div>
 
                                 <form onSubmit={processPayment} className="space-y-5">
                                     <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Datos de la Tarjeta</label>
-                                        <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
-                                            <div className="p-3 border-b border-slate-200 flex items-center gap-2 relative">
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Datos de la Tarjeta</label>
+                                        <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-800 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
+                                            <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2 relative">
                                                 <span className="material-symbols-outlined text-slate-400 text-xl">credit_card</span>
                                                 <input 
                                                     type="text" 
-                                                    className="w-full bg-transparent outline-none text-slate-900 font-medium placeholder-slate-400"
+                                                    className="w-full bg-transparent outline-none text-slate-900 dark:text-white font-medium placeholder-slate-400"
                                                     placeholder="Número de tarjeta"
                                                     value={cardNumber}
                                                     onChange={formatCardNumber}
@@ -226,10 +226,10 @@ const Premium = () => {
                                                 />
                                             </div>
                                             <div className="flex">
-                                                <div className="p-3 border-r border-slate-200 w-1/2">
+                                                <div className="p-3 border-r border-slate-200 dark:border-slate-700 w-1/2">
                                                     <input 
                                                         type="text" 
-                                                        className="w-full bg-transparent outline-none text-slate-900 font-medium placeholder-slate-400"
+                                                        className="w-full bg-transparent outline-none text-slate-900 dark:text-white font-medium placeholder-slate-400"
                                                         placeholder="MM / YY"
                                                         value={expiry}
                                                         onChange={formatExpiry}
@@ -241,7 +241,7 @@ const Premium = () => {
                                                 <div className="p-3 w-1/2 flex items-center gap-2">
                                                     <input 
                                                         type="text" 
-                                                        className="w-full bg-transparent outline-none text-slate-900 font-medium placeholder-slate-400"
+                                                        className="w-full bg-transparent outline-none text-slate-900 dark:text-white font-medium placeholder-slate-400"
                                                         placeholder="CVC"
                                                         value={cvc}
                                                         onChange={(e) => setCvc(e.target.value.replace(/\D/g, ''))}
@@ -256,10 +256,10 @@ const Premium = () => {
                                     </div>
 
                                     <div>
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Nombre en la Tarjeta</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Nombre en la Tarjeta</label>
                                         <input 
                                             type="text" 
-                                            className="w-full p-3 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 font-medium outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                            className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                             placeholder="John Doe"
                                             value={cardName}
                                             onChange={(e) => setCardName(e.target.value)}
@@ -272,7 +272,7 @@ const Premium = () => {
                                         type="submit"
                                         disabled={isProcessing}
                                         className={`w-full py-4 rounded-xl font-bold flex justify-center items-center gap-2 transition-all shadow-lg
-                                            ${isProcessing ? 'bg-slate-200 text-slate-500 cursor-not-allowed hidden' : 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20 active:scale-95'}`}
+                                            ${isProcessing ? 'bg-slate-200 text-slate-500 dark:text-slate-400 cursor-not-allowed hidden' : 'bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20 active:scale-95'}`}
                                     >
                                         <span className="material-symbols-outlined text-lg">lock</span>
                                         Pagar €4.99

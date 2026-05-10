@@ -123,15 +123,15 @@ const Store = () => {
         : STORE_PRODUCTS.filter(p => p.category === activeCategory);
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-16">
             {/* Category Bar */}
-            <div className="sticky top-16 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 px-8 py-4 flex justify-between items-center">
+            <div className="sticky top-16 z-40 bg-white dark:bg-gray-900/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-8 py-4 flex justify-between items-center">
                 <div className="flex gap-6 text-sm font-bold tracking-widest uppercase text-gray-400">
                     {categories.map(cat => (
                         <span
                             key={cat}
                             onClick={() => setActiveCategory(cat)}
-                            className={`cursor-pointer hover:text-primary transition-colors ${activeCategory === cat ? 'text-gray-900' : ''}`}
+                            className={`cursor-pointer hover:text-primary transition-colors ${activeCategory === cat ? 'text-gray-900 dark:text-white' : ''}`}
                         >
                             {cat}
                         </span>
@@ -150,12 +150,12 @@ const Store = () => {
                     alt="Store Hero" 
                     className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:scale-105 transition-transform duration-700 blur-sm"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-gray-50/80 to-gray-50/40"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-gray-950 via-gray-50/80 dark:via-gray-950/80 to-gray-50/40"></div>
                 <div className="relative z-10 text-center px-4">
                     <h1 className="text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-600 mb-4 tracking-tighter" style={{ fontFamily: "'Arial Black', sans-serif" }}>
                         OTAKU STORE
                     </h1>
-                    <p className="text-lg md:text-xl text-gray-600 font-medium tracking-wide max-w-2xl mx-auto">
+                    <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 font-medium tracking-wide max-w-2xl mx-auto">
                         Figuras, manga, ropa y accesorios oficiales. Te llevamos directamente a la tienda.
                     </p>
                 </div>
@@ -164,7 +164,7 @@ const Store = () => {
             {/* Product Grid */}
             <div className="max-w-[1600px] mx-auto px-4 md:px-8">
                 <div className="flex items-end justify-between mb-8">
-                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
                         <span className="w-1 h-7 bg-primary block rounded-full"></span>
                         {activeCategory === 'Todos' ? 'Novedades Exclusivas' : activeCategory}
                     </h2>
@@ -172,7 +172,7 @@ const Store = () => {
                 </div>
 
                 {filteredProducts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-gray-500">
+                    <div className="flex flex-col items-center justify-center py-24 text-gray-500 dark:text-gray-400">
                         <span className="material-symbols-outlined text-6xl mb-4 text-gray-300">inventory_2</span>
                         <p className="text-lg font-bold">No hay productos en esta categoría</p>
                     </div>
@@ -180,8 +180,8 @@ const Store = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                         {filteredProducts.map(product => (
                             <a key={product.id} href={product.url} target="_blank" rel="noopener noreferrer"
-                               className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow flex flex-col">
-                                <div className="relative aspect-[3/4] overflow-hidden bg-white">
+                               className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow flex flex-col">
+                                <div className="relative aspect-[3/4] overflow-hidden bg-white dark:bg-gray-900">
                                     <img 
                                         src={product.image} 
                                         alt={product.name} 
@@ -199,9 +199,9 @@ const Store = () => {
                                     )}
                                 </div>
                                 
-                                <div className="p-4 border-t border-gray-100 flex-1 flex flex-col">
+                                <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex-1 flex flex-col">
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{product.category}</p>
-                                    <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-3 min-h-[2.5rem] group-hover:text-primary transition-colors">{product.name}</h3>
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2 mb-3 min-h-[2.5rem] group-hover:text-primary transition-colors">{product.name}</h3>
                                     <div className="flex items-center justify-between gap-3 mt-auto">
                                         <span className="text-xl font-black text-primary">€{product.price.toFixed(2)}</span>
                                         <span className="bg-primary group-hover:bg-orange-600 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-1.5 text-xs">

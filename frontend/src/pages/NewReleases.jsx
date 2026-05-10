@@ -42,13 +42,13 @@ const NewReleases = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-white pb-16">
+        <div className="min-h-screen bg-white dark:bg-gray-900 pb-16">
             <div className="bg-gradient-to-r from-primary to-orange-600 py-12 md:py-16 mb-8">
                 <div className="max-w-[1600px] mx-auto px-6">
                     <div className="flex items-center gap-3 mb-2">
@@ -81,7 +81,7 @@ const NewReleases = () => {
                                 }
                                 className="cursor-pointer group flex flex-col"
                             >
-                                <div className="relative aspect-[2/3] overflow-hidden rounded-lg shadow-sm bg-gray-100">
+                                <div className="relative aspect-[2/3] overflow-hidden rounded-lg shadow-sm bg-gray-100 dark:bg-gray-800">
                                     <img
                                         src={a.coverImage.large} alt={title}
                                         className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${a.isAdult ? 'blur-sm scale-110' : ''}`}
@@ -107,8 +107,8 @@ const NewReleases = () => {
                                         </>
                                     )}
                                 </div>
-                                <h3 className="font-bold text-gray-900 mt-2 text-sm truncate group-hover:text-primary transition-colors">{title}</h3>
-                                <p className="text-xs text-gray-500 truncate">{a.genres?.slice(0, 2).join(', ') || 'Anime'}</p>
+                                <h3 className="font-bold text-gray-900 dark:text-white mt-2 text-sm truncate group-hover:text-primary transition-colors">{title}</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{a.genres?.slice(0, 2).join(', ') || 'Anime'}</p>
                             </div>
                         );
                     })}

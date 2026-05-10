@@ -69,14 +69,14 @@ const Manga = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-background-light flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background-light pb-12">
+        <div className="min-h-screen bg-white dark:bg-gray-950 pb-12">
             {/* Hero Section */}
             <div className="relative w-full h-[40vh] bg-slate-900 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent z-10"></div>
@@ -98,7 +98,7 @@ const Manga = () => {
             </div>
 
             <div className="max-w-[1600px] mx-auto px-4 md:px-8 mt-12">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
                     <span className="w-1 h-6 bg-primary block rounded-full"></span>
                     Mangas en Tendencia
                 </h2>
@@ -131,7 +131,7 @@ const Manga = () => {
                                     </div>
                                 )}
                             </div>
-                            <h3 className="font-bold text-sm text-gray-800 line-clamp-2 group-hover:text-primary transition-colors">
+                            <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200 line-clamp-2 group-hover:text-primary transition-colors">
                                 {manga.isAdult ? '■■■■■■■■' : manga.title.romaji}
                             </h3>
                         </div>
@@ -139,7 +139,7 @@ const Manga = () => {
                 </div>
 
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                    <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         <span className="w-1 h-6 bg-primary block rounded-full"></span>
                         Catálogo Completo
                     </h2>
@@ -149,7 +149,7 @@ const Manga = () => {
                             placeholder="Buscar manga..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
-                            className="w-full bg-white border border-gray-300 text-gray-800 rounded-full py-2 pl-4 pr-10 focus:outline-none focus:border-primary shadow-sm"
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 rounded-full py-2 pl-4 pr-10 focus:outline-none focus:border-primary shadow-sm"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                             {searching ? (
@@ -192,7 +192,7 @@ const Manga = () => {
                                     )
                                 )}
                             </div>
-                            <h3 className="font-bold text-sm text-gray-800 line-clamp-2 group-hover:text-primary transition-colors">
+                            <h3 className="font-bold text-sm text-gray-800 dark:text-gray-200 line-clamp-2 group-hover:text-primary transition-colors">
                                 {manga.isAdult ? '■■■■■■■■' : manga.title.romaji}
                             </h3>
                         </div>

@@ -46,7 +46,7 @@ const Games = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-light pb-12">
+    <div className="min-h-screen bg-white dark:bg-gray-950 pb-12">
       {toast && (
         <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-bold text-white transition-all ${
           toast.success ? 'bg-green-600' : 'bg-red-500'
@@ -81,14 +81,14 @@ const Games = () => {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 mt-12">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
           <span className="w-1 h-6 bg-indigo-500 block rounded-full" />
           Juegos Gratuitos
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {GAMES.map(game => (
-            <div key={game.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col">
+            <div key={game.id} className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-gray-800 flex flex-col">
               <div className="relative aspect-video bg-gradient-to-br from-slate-800 to-indigo-900">
                 {/* Gradient is always the background; img renders on top and hides itself on error */}
                 <img
@@ -108,8 +108,8 @@ const Games = () => {
                 )}
               </div>
               <div className="p-4 flex flex-col flex-1">
-                <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{game.title}</h3>
-                <p className="text-xs text-gray-500 mb-4 line-clamp-2 flex-1">{game.short_description}</p>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">{game.title}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 flex-1">{game.short_description}</p>
                 <div className="flex items-center justify-between mt-auto">
                   <span className="text-xs font-bold text-gray-400 flex items-center gap-1">
                     <span className="material-symbols-outlined text-[14px]">desktop_windows</span>

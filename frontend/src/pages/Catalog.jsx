@@ -95,25 +95,25 @@ const Catalog = () => {
     };
 
     return (
-        <div className="w-full bg-background-light font-display">
+        <div className="w-full bg-white dark:bg-gray-950 font-display">
             {/* Header del Catálogo */}
-            <div className="bg-white border-b border-gray-200 pt-24 pb-8 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 pt-24 pb-8 shadow-sm">
                 <div className="max-w-[1440px] mx-auto px-4 md:px-10">
-                    <h1 className="text-3xl font-black tracking-tight text-gray-900 mb-6 flex items-center gap-3">
+                    <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white mb-6 flex items-center gap-3">
                         <span className="material-symbols-outlined text-primary text-4xl">explore</span>
                         Catálogo Completo
                     </h1>
 
-                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-gray-50 dark:bg-gray-950 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                         <div className="flex items-center gap-3 w-full md:w-auto">
-                            <label className="text-sm font-bold text-gray-500 uppercase flex items-center gap-1">
+                            <label className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase flex items-center gap-1">
                                 <span className="material-symbols-outlined text-[18px]">sort</span>
                                 Ordenar Por:
                             </label>
                             <select
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value)}
-                                className="bg-white border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-2 shadow-sm font-medium w-full md:w-64 cursor-pointer outline-none transition-shadow"
+                                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block p-2 shadow-sm font-medium w-full md:w-64 cursor-pointer outline-none transition-shadow"
                             >
                                 {sortOptions.map(option => (
                                     <option key={option.value} value={option.value}>
@@ -129,7 +129,7 @@ const Catalog = () => {
                             </div>
                             <input
                                 type="text"
-                                className="bg-white border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block w-full pl-10 p-2 shadow-sm outline-none transition-all placeholder:text-gray-400"
+                                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary block w-full pl-10 p-2 shadow-sm outline-none transition-all placeholder:text-gray-400"
                                 placeholder="Filtrar catálogo por título..."
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
@@ -145,12 +145,12 @@ const Catalog = () => {
                 {loading && page === 1 ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <span className="material-symbols-outlined animate-spin text-primary text-5xl mb-4">refresh</span>
-                        <p className="text-gray-500 font-bold uppercase tracking-wider text-sm">Cargando Catálogo...</p>
+                        <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider text-sm">Cargando Catálogo...</p>
                     </div>
                 ) : animes.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-32 bg-white rounded-2xl border border-dashed border-gray-300">
+                    <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
                          <span className="material-symbols-outlined text-gray-300 text-6xl mb-4">search_off</span>
-                         <h3 className="text-xl font-bold text-gray-600 mb-2">No se encontraron animes</h3>
+                         <h3 className="text-xl font-bold text-gray-600 dark:text-gray-400 mb-2">No se encontraron animes</h3>
                          <p className="text-gray-400">Prueba con otros filtros o términos de búsqueda.</p>
                     </div>
                 ) : (
@@ -165,7 +165,7 @@ const Catalog = () => {
                                     }
                                     className="group relative flex flex-col gap-2 cursor-pointer"
                                 >
-                                    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-gray-200 border border-gray-100 shadow-sm">
+                                    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700 border border-gray-100 dark:border-gray-800 shadow-sm">
                                         <div
                                             className={`w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105 ${anime.isAdult ? 'blur-sm scale-110' : ''}`}
                                             style={{ backgroundImage: `url('${anime.coverImage?.extraLarge || anime.coverImage?.large}')` }}
@@ -198,10 +198,10 @@ const Catalog = () => {
                                         )}
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors text-sm line-clamp-2 leading-tight">
+                                        <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors text-sm line-clamp-2 leading-tight">
                                             {anime.title.romaji || anime.title.english}
                                         </h3>
-                                        <p className="text-xs text-gray-500 mt-1 capitalize flex items-center gap-1">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize flex items-center gap-1">
                                             {anime.format || 'TV'} {anime.seasonYear ? `• ${anime.seasonYear}` : ''}
                                         </p>
                                     </div>
@@ -237,13 +237,13 @@ const Catalog = () => {
             </div>
 
             {/* Footer */}
-            <footer className="bg-white border-t border-gray-100 py-8 mt-auto">
+            <footer className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 py-8 mt-auto">
                 <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary text-2xl">live_tv</span>
-                        <span className="font-bold text-gray-900">SpoilerSafe</span>
+                        <span className="font-bold text-gray-900 dark:text-white">SpoilerSafe</span>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                         © 2026 SpoilerSafe Inc. Datos proporcionados por AniList.
                     </div>
                 </div>

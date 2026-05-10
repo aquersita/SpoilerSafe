@@ -40,7 +40,7 @@ const AdminPanel = ({ user }) => {
     };
 
     if (!currentUser?.is_admin) return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 px-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 px-4">
             <span className="material-symbols-outlined text-6xl mb-4 text-red-300">gpp_bad</span>
             <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Acceso Denegado</h2>
             <p className="text-sm text-center dark:text-gray-400">No tienes permisos de administrador.</p>

@@ -110,7 +110,7 @@ const EpisodePlayer = ({ user }) => {
     }, [id]);
 
     if (loading) return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
     );
@@ -125,11 +125,11 @@ const EpisodePlayer = ({ user }) => {
     const hasNext = epNum < totalEps;
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-16">
             {/* Hero Banner */}
             <div className="w-full h-[35vh] md:h-[40vh] bg-gray-900 relative overflow-hidden">
                 <img src={bannerImage} alt={title} className="w-full h-full object-cover opacity-40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-transparent to-gray-900/50"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-gray-950 via-transparent to-gray-900/50"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-transparent"></div>
 
                 <div className="absolute inset-0 flex items-center z-10">
@@ -152,15 +152,15 @@ const EpisodePlayer = ({ user }) => {
 
             <div className="max-w-[1200px] mx-auto px-4 md:px-6 -mt-8 relative z-10">
                 {/* Navigation entre episodios */}
-                <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-8">
+                <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 mb-8">
                     <button disabled={!hasPrev} onClick={() => navigate(`/anime/${id}/episode/${epNum - 1}`)}
-                        className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                         <span className="material-symbols-outlined">chevron_left</span>
                         Episodio {epNum - 1}
                     </button>
-                    <span className="text-lg font-black text-gray-900">Ep. {epNum}</span>
+                    <span className="text-lg font-black text-gray-900 dark:text-white">Ep. {epNum}</span>
                     <button disabled={!hasNext} onClick={() => navigate(`/anime/${id}/episode/${epNum + 1}`)}
-                        className="flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                         Episodio {epNum + 1}
                         <span className="material-symbols-outlined">chevron_right</span>
                     </button>
@@ -171,8 +171,8 @@ const EpisodePlayer = ({ user }) => {
                     <div className="lg:col-span-2 space-y-8">
 
                         {/* Dónde Ver Este Episodio */}
-                        <section className="bg-white rounded-xl border border-gray-200 p-6">
-                            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2 mb-5">
+                        <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                            <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 mb-5">
                                 <span className="material-symbols-outlined text-primary">play_circle</span>
                                 Dónde Ver Este Episodio
                             </h2>
@@ -200,20 +200,20 @@ const EpisodePlayer = ({ user }) => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {anime.externalLinks.filter(l => l.site).map((link, i) => (
                                         <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                                           className="flex items-center gap-3 bg-gray-50 border border-gray-200 hover:border-primary hover:shadow-md p-4 rounded-xl group transition-all">
-                                            <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center group-hover:bg-primary/10 shrink-0 transition-colors">
+                                           className="flex items-center gap-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-md p-4 rounded-xl group transition-all">
+                                            <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex items-center justify-center group-hover:bg-primary/10 shrink-0 transition-colors">
                                                 <span className="material-symbols-outlined text-gray-400 group-hover:text-primary">open_in_new</span>
                                             </div>
                                             <div className="flex-1 overflow-hidden">
-                                                <p className="text-sm font-bold text-gray-900 truncate group-hover:text-primary transition-colors">{link.site}</p>
-                                                <p className="text-xs text-gray-500">Ver Episodio {epNum}</p>
+                                                <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">{link.site}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Ver Episodio {epNum}</p>
                                             </div>
                                             <span className="material-symbols-outlined text-gray-300 group-hover:text-primary transition-colors">arrow_forward</span>
                                         </a>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500">
+                                <div className="bg-gray-50 dark:bg-gray-950 border border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center text-gray-500 dark:text-gray-400">
                                     <span className="material-symbols-outlined text-4xl mb-2 text-gray-300">link_off</span>
                                     <p>No hay otros enlaces oficiales registrados para este anime en AniList.</p>
                                 </div>
@@ -221,26 +221,26 @@ const EpisodePlayer = ({ user }) => {
                         </section>
 
                         {/* Comentarios y Discusión */}
-                        <section className="bg-white rounded-xl border border-gray-200 p-6">
-                            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2 mb-6">
+                        <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                            <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 mb-6">
                                 <span className="material-symbols-outlined text-primary">forum</span>
                                 Discusión del Episodio ({comments.length})
                             </h2>
 
                             {/* Escribir Comentario */}
-                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-6">
+                            <div className="bg-gray-50 dark:bg-gray-950 p-4 rounded-lg border border-gray-100 dark:border-gray-800 mb-6">
                                 <div className="flex gap-3">
                                     <img src={currentUser?.avatar_url || "https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"} alt="avatar" className="w-9 h-9 rounded-full object-cover shrink-0" />
                                     <div className="flex-1">
                                         <textarea
-                                            className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
+                                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
                                             rows="2"
                                             placeholder="Comparte tu opinión sobre este episodio..."
                                             value={newCommentText}
                                             onChange={(e) => setNewCommentText(e.target.value)}
                                         ></textarea>
                                         <div className="flex items-center justify-between mt-2">
-                                            <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">
+                                            <label className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none">
                                                 <input type="checkbox" className="form-checkbox text-primary focus:ring-primary rounded w-3.5 h-3.5"
                                                     checked={isSpoiler} onChange={(e) => setIsSpoiler(e.target.checked)} />
                                                 <span className="material-symbols-outlined text-[14px] text-red-400">warning</span>
@@ -265,11 +265,11 @@ const EpisodePlayer = ({ user }) => {
                                     </div>
                                 )}
                                 {comments.map((comment) => (
-                                    <div key={comment.id} className="flex gap-3 pb-5 border-b border-gray-100 last:border-0">
+                                    <div key={comment.id} className="flex gap-3 pb-5 border-b border-gray-100 dark:border-gray-800 last:border-0">
                                         <img src={comment.avatar_url || "https://www.crunchyroll.com/i/beta/avatar/cr_gray.png"} alt="avatar" className="w-8 h-8 rounded-full shrink-0" />
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-bold text-gray-900 text-sm">{comment.username || `User_${comment.uid?.slice(0,6)}`}</span>
+                                                <span className="font-bold text-gray-900 dark:text-white text-sm">{comment.username || `User_${comment.uid?.slice(0,6)}`}</span>
                                                 <span className="text-xs text-gray-400">{comment.created_at?.toDate ? comment.created_at.toDate().toLocaleDateString('es-ES') : ''}</span>
                                                 {comment.is_spoiler && (
                                                     <span className="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5">
@@ -279,13 +279,13 @@ const EpisodePlayer = ({ user }) => {
                                             </div>
 
                                             {comment.is_spoiler ? (
-                                                <div className="mt-1 rounded-lg bg-gray-50 border border-gray-200 p-3">
+                                                <div className="mt-1 rounded-lg bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 p-3">
                                                     <SpoilerFog isRevealed={false}>
-                                                        <p className="text-gray-700 text-sm">{comment.content}</p>
+                                                        <p className="text-gray-700 dark:text-gray-300 text-sm">{comment.content}</p>
                                                     </SpoilerFog>
                                                 </div>
                                             ) : (
-                                                <p className="text-gray-700 text-sm mt-1">{comment.content}</p>
+                                                <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">{comment.content}</p>
                                             )}
 
                                             <div className="flex items-center gap-4 mt-2 text-gray-400 text-xs">
@@ -307,7 +307,7 @@ const EpisodePlayer = ({ user }) => {
                     {/* Sidebar */}
                     <div className="space-y-6">
                         {/* Episode Info Card */}
-                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                             <div className="aspect-video bg-gray-800 relative overflow-hidden">
                                 <img src={coverImage} alt={title} className="w-full h-full object-cover opacity-80" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
@@ -316,13 +316,13 @@ const EpisodePlayer = ({ user }) => {
                                 </div>
                             </div>
                             <div className="p-4">
-                                <h3 className="font-black text-gray-900 text-sm mb-1">{title}</h3>
-                                <p className="text-xs text-gray-500 mb-3">{anime?.genres?.slice(0, 3).join(', ')}</p>
-                                <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+                                <h3 className="font-black text-gray-900 dark:text-white text-sm mb-1">{title}</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{anime?.genres?.slice(0, 3).join(', ')}</p>
+                                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-4">
                                     {anime?.averageScore && (
                                         <div className="flex items-center gap-1">
                                             <span className="material-symbols-outlined text-yellow-500 text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                                            <span className="font-bold text-gray-900">{(anime.averageScore / 10).toFixed(1)}</span>
+                                            <span className="font-bold text-gray-900 dark:text-white">{(anime.averageScore / 10).toFixed(1)}</span>
                                         </div>
                                     )}
                                     <span>{totalEps} eps</span>
@@ -359,8 +359,8 @@ const EpisodePlayer = ({ user }) => {
                         </div>
 
                         {/* Quick Episode List */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-4">
-                            <h3 className="font-black text-gray-900 text-sm mb-3 flex items-center gap-2">
+                        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                            <h3 className="font-black text-gray-900 dark:text-white text-sm mb-3 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary text-lg">list</span>
                                 Episodios cercanos
                             </h3>
@@ -371,7 +371,7 @@ const EpisodePlayer = ({ user }) => {
                                     return (
                                         <button key={ep} onClick={() => navigate(`/anime/${id}/episode/${ep}`)}
                                             className={`w-full flex items-center gap-3 p-2 rounded-lg text-left text-sm transition-colors ${
-                                                ep === epNum ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50'
+                                                ep === epNum ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-950'
                                             }`}>
                                             <span className={`text-xs font-bold w-6 text-center ${ep === epNum ? 'text-primary' : 'text-gray-400'}`}>{ep}</span>
                                             <span className="flex-1 truncate">Episodio {ep}</span>

@@ -104,11 +104,11 @@ if (currentUser?.uid) {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-white flex items-center justify-center">Cargando detalles...</div>;
+        return <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">Cargando detalles...</div>;
     }
 
     if (!anime) {
-        return <div className="min-h-screen bg-white flex items-center justify-center">Anime no encontrado</div>;
+        return <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">Anime no encontrado</div>;
     }
 
     if (ageGateVisible) {
@@ -163,7 +163,7 @@ if (currentUser?.uid) {
                 {/* Gradiente lateral izquierdo */}
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/75 to-transparent z-10" />
                 {/* Gradiente inferior hacia la siguiente sección */}
-                <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-gray-50 to-transparent z-10" />
+                <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-gray-50 dark:from-gray-950 to-transparent z-10" />
 
                 <div className="relative z-20 h-full max-w-[1400px] mx-auto px-6 md:px-10 flex items-center">
                     <div className="flex items-end gap-10 w-full pb-12">
@@ -193,7 +193,7 @@ if (currentUser?.uid) {
                                 {anime.seasonYear && (
                                     <span className="text-gray-400 font-normal">{anime.seasonYear}</span>
                                 )}
-                                <span className="text-gray-500">·</span>
+                                <span className="text-gray-500 dark:text-gray-400">·</span>
                                 {anime.genres?.slice(0, 3).map((g, i) => (
                                     <span key={i} className="text-gray-300 font-normal">{g}</span>
                                 ))}
@@ -228,7 +228,7 @@ if (currentUser?.uid) {
                                 {anime.trailer?.id && (
                                     <button
                                         onClick={() => window.open(`https://youtube.com/watch?v=${anime.trailer.id}`, '_blank')}
-                                        className="flex items-center gap-2 border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all text-sm uppercase tracking-wide"
+                                        className="flex items-center gap-2 border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white dark:bg-gray-900/5 hover:bg-white dark:bg-gray-900/10 backdrop-blur-sm transition-all text-sm uppercase tracking-wide"
                                     >
                                         <span className="material-icons-outlined">movie</span>
                                         Tráiler
@@ -265,7 +265,7 @@ if (currentUser?.uid) {
                                     className={`p-3 rounded-lg border-2 transition-all hover:scale-105 active:scale-100 ${
                                         isFavorite
                                             ? 'border-rose-400 bg-rose-500/20 text-rose-300 shadow-md shadow-rose-500/20'
-                                            : 'border-white/30 hover:border-rose-400/60 text-white bg-white/5 hover:bg-rose-500/10'
+                                            : 'border-white/30 hover:border-rose-400/60 text-white bg-white dark:bg-gray-900/5 hover:bg-rose-500/10'
                                     }`}
                                 >
                                     <span className="material-icons-outlined text-xl">{isFavorite ? 'favorite' : 'favorite_border'}</span>
@@ -301,7 +301,7 @@ if (currentUser?.uid) {
                                     className={`p-3 rounded-lg border-2 transition-all hover:scale-105 active:scale-100 ${
                                         inWatchlist
                                             ? 'border-primary bg-primary/20 text-primary shadow-md shadow-primary/20'
-                                            : 'border-white/30 hover:border-white/60 text-white bg-white/5 hover:bg-white/10'
+                                            : 'border-white/30 hover:border-white/60 text-white bg-white dark:bg-gray-900/5 hover:bg-white dark:bg-gray-900/10'
                                     }`}
                                 >
                                     <span className="material-icons-outlined text-xl">{inWatchlist ? 'bookmark' : 'bookmark_border'}</span>
@@ -309,10 +309,10 @@ if (currentUser?.uid) {
                             </div>
 
                             {/* Stats rápidos */}
-                            <div className="flex items-center gap-5 text-xs text-gray-500 pt-1">
+                            <div className="flex items-center gap-5 text-xs text-gray-500 dark:text-gray-400 pt-1">
                                 <span>{totalEpisodes} episodios</span>
                                 {anime.season && <span className="capitalize">{anime.season.toLowerCase()} {anime.seasonYear}</span>}
-                                <span className="bg-white/10 text-gray-300 px-2 py-0.5 rounded border border-white/10">Sub · Dob</span>
+                                <span className="bg-white dark:bg-gray-900/10 text-gray-300 px-2 py-0.5 rounded border border-white/10">Sub · Dob</span>
                             </div>
                         </div>
                     </div>
@@ -325,20 +325,20 @@ if (currentUser?.uid) {
                 const anilistLinks = (anime.externalLinks || []).filter(l => l.site && l.url);
                 const allLinks = [katanime, ...anilistLinks];
                 return (
-                    <section className="py-10 bg-gray-50 border-t border-gray-100">
+                    <section className="py-10 bg-gray-50 dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800">
                         <div className="max-w-[1600px] mx-auto px-8">
-                            <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2 mb-6">
+                            <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-6">
                                 <span className="w-1 h-6 bg-primary block rounded-full"></span>
                                 Dónde Ver
                             </h2>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                 {allLinks.map((link, i) => (
                                     <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                                       className="flex items-center gap-3 bg-white border border-gray-200 hover:border-primary hover:shadow-md p-4 rounded-lg group transition-all">
-                                        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 shrink-0">
+                                       className="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-md p-4 rounded-lg group transition-all">
+                                        <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-950 flex items-center justify-center group-hover:bg-primary/10 shrink-0">
                                             <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-lg">open_in_new</span>
                                         </div>
-                                        <span className="text-sm font-bold text-gray-700 group-hover:text-primary truncate transition-colors">{link.site}</span>
+                                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary truncate transition-colors">{link.site}</span>
                                     </a>
                                 ))}
                             </div>
@@ -348,13 +348,13 @@ if (currentUser?.uid) {
             })()}
 
             {/* Episodios Section */}
-            <section className="py-12 bg-white border-t border-gray-100 min-h-[400px]">
+            <section className="py-12 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 min-h-[400px]">
                 <div className="max-w-[1600px] mx-auto px-8">
                     <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                             <span className="w-1 h-6 bg-primary block rounded-full"></span>
                             Episodios
-                            <span className="text-sm font-normal text-gray-500 ml-2">
+                            <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
                                 ({totalEpisodes} episodios{anime.status === 'RELEASING' ? ' • En emisión' : ''})
                             </span>
                         </h2>
@@ -393,7 +393,7 @@ if (currentUser?.uid) {
                             const watched = watchedEps.has(epN);
                             return (
                             <div key={i} onClick={() => navigate(`/anime/${id}/episode/${epN}`)}
-                                 className={`group cursor-pointer bg-white rounded-md overflow-hidden border transition-all flex flex-col ${watched ? 'border-green-300 hover:shadow-lg hover:border-green-400' : 'border-gray-200 hover:shadow-lg hover:border-primary'}`}>
+                                 className={`group cursor-pointer bg-white dark:bg-gray-900 rounded-md overflow-hidden border transition-all flex flex-col ${watched ? 'border-green-300 hover:shadow-lg hover:border-green-400' : 'border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-primary'}`}>
                                 <div className="relative aspect-video bg-gray-800 overflow-hidden">
                                     <img src={bannerImage || coverImage} alt={`Ep ${epN}`}
                                          className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${watched ? 'opacity-50 group-hover:opacity-80' : 'opacity-70 group-hover:opacity-100'}`} />
@@ -412,7 +412,7 @@ if (currentUser?.uid) {
                                     </div>
                                 </div>
                                 <div className="p-2.5">
-                                    <h3 className={`font-bold text-xs transition-colors ${watched ? 'text-green-600 group-hover:text-green-700' : 'text-gray-800 group-hover:text-primary'}`}>Episodio {epN}</h3>
+                                    <h3 className={`font-bold text-xs transition-colors ${watched ? 'text-green-600 group-hover:text-green-700' : 'text-gray-800 dark:text-gray-200 group-hover:text-primary'}`}>Episodio {epN}</h3>
                                 </div>
                             </div>
                             );
@@ -420,8 +420,8 @@ if (currentUser?.uid) {
 
                         {/* Próximamente card */}
                         {anime.nextAiringEpisode && (
-                            <div className="bg-gray-100 rounded-md overflow-hidden border-2 border-dashed border-gray-300 flex flex-col opacity-70 cursor-default">
-                                <div className="relative aspect-video bg-gray-200 overflow-hidden flex items-center justify-center">
+                            <div className="bg-gray-100 dark:bg-gray-800 rounded-md overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col opacity-70 cursor-default">
+                                <div className="relative aspect-video bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
                                     <div className="text-center">
                                         <span className="material-symbols-outlined text-gray-400 text-4xl">schedule</span>
                                     </div>
@@ -430,7 +430,7 @@ if (currentUser?.uid) {
                                     </div>
                                 </div>
                                 <div className="p-2.5 text-center">
-                                    <h3 className="font-bold text-gray-500 text-xs uppercase">Próximamente</h3>
+                                    <h3 className="font-bold text-gray-500 dark:text-gray-400 text-xs uppercase">Próximamente</h3>
                                     <p className="text-[10px] text-gray-400 mt-0.5">
                                         {new Date(anime.nextAiringEpisode.airingAt * 1000).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                                     </p>
@@ -452,24 +452,24 @@ if (currentUser?.uid) {
             </section>
 
             {/* Cápsulas del Tiempo Section */}
-            <section className="py-12 bg-gray-50 border-t border-gray-100 min-h-[300px]">
+            <section className="py-12 bg-gray-50 dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 min-h-[300px]">
                 <div className="max-w-[1600px] mx-auto px-8">
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2 mb-8">
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-8">
                         <span className="w-1 h-6 bg-primary block rounded-full"></span>
                         Cápsulas del Tiempo ⏳
                     </h2>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Crear Cápsula */}
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 h-fit">
-                            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-fit">
+                            <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary">add_box</span>
                                 Enterrar Nueva Cápsula
                             </h3>
-                            <p className="text-sm text-gray-500 mb-4">Escribe tus teorías iniciales. Permanecerán bloqueadas hasta que alcances el episodio objetivo.</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Escribe tus teorías iniciales. Permanecerán bloqueadas hasta que alcances el episodio objetivo.</p>
 
                             <textarea
-                                className="w-full bg-gray-50 border border-gray-200 rounded p-3 text-sm focus:ring-2 focus:ring-primary outline-none mb-3 resize-none"
+                                className="w-full bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded p-3 text-sm focus:ring-2 focus:ring-primary outline-none mb-3 resize-none"
                                 rows="3"
                                 placeholder="Yo creo que el villano es..."
                                 value={newCapsuleText}
@@ -478,12 +478,12 @@ if (currentUser?.uid) {
 
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <label className="text-sm font-bold text-gray-600">Abrir en Ep:</label>
+                                    <label className="text-sm font-bold text-gray-600 dark:text-gray-400">Abrir en Ep:</label>
                                     <input
                                         type="number"
                                         min="1"
                                         max={anime.episodes || 100}
-                                        className="w-16 p-1 border border-gray-200 rounded text-center"
+                                        className="w-16 p-1 border border-gray-200 dark:border-gray-700 rounded text-center"
                                         value={unlockEpisode}
                                         onChange={(e) => setUnlockEpisode(e.target.value)}
                                     />
@@ -500,16 +500,16 @@ if (currentUser?.uid) {
                         {/* Mis Cápsulas */}
                         <div className="lg:col-span-2">
                             {capsules.length === 0 ? (
-                                <div className="bg-white border border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
+                                <div className="bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center text-gray-500 dark:text-gray-400">
                                     No tienes cápsulas enterradas para este anime.
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {capsules.map((cap, i) => (
-                                        <div key={i} className={`p-5 rounded-lg border relative overflow-hidden ${cap.locked ? 'bg-gray-100 border-gray-200' : 'bg-white border-green-200 shadow-sm'}`}>
+                                        <div key={i} className={`p-5 rounded-lg border relative overflow-hidden ${cap.locked ? 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700' : 'bg-white dark:bg-gray-900 border-green-200 shadow-sm'}`}>
                                             <div className="flex justify-between items-center mb-3">
-                                                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Cápsula #{i+1}</span>
-                                                <span className={`text-xs font-bold px-2 py-1 rounded ${cap.locked ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-700'}`}>
+                                                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Cápsula #{i+1}</span>
+                                                <span className={`text-xs font-bold px-2 py-1 rounded ${cap.locked ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400' : 'bg-green-100 text-green-700'}`}>
                                                     {cap.locked ? `Bloqueada hasta Ep ${cap.unlock_at}` : 'Desbloqueada'}
                                                 </span>
                                             </div>
@@ -521,7 +521,7 @@ if (currentUser?.uid) {
                                                     <div className="h-2 w-1/2 bg-gray-300 rounded-full"></div>
                                                 </div>
                                             ) : (
-                                                <p className="text-gray-800 text-sm font-medium">"{cap.content}"</p>
+                                                <p className="text-gray-800 dark:text-gray-200 text-sm font-medium">"{cap.content}"</p>
                                             )}
                                         </div>
                                     ))}

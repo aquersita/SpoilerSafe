@@ -35,7 +35,7 @@ export const getCatalog = (page, sort, search) => {
   if (search) {
     return gql(
       `query($p:Int,$s:[MediaSort],$q:String){Page(page:$p,perPage:24){pageInfo{hasNextPage}media(search:$q,sort:$s,type:ANIME){id title{romaji}coverImage{large}averageScore episodes status genres format isAdult}}}`,
-      { p: page, s: [sort], q: search }
+      { p: page, s: ['SEARCH_MATCH'], q: search }
     );
   }
   return gql(

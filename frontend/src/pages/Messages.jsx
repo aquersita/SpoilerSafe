@@ -163,7 +163,7 @@ export default function Messages() {
   if (!firebaseUser) return null;
 
   if (initializing) return (
-    <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-white">
+    <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-white dark:bg-slate-900">
       <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-orange-500" />
     </div>
   );
@@ -171,13 +171,13 @@ export default function Messages() {
   const totalUnread = convos.reduce((s, c) => s + (c.unread?.[firebaseUser.uid] || 0), 0);
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-white" style={{ fontFamily: "'Plus Jakarta Sans','Inter',sans-serif" }}>
+    <div className="flex h-[calc(100vh-64px)] bg-white dark:bg-slate-900" style={{ fontFamily: "'Plus Jakarta Sans','Inter',sans-serif" }}>
 
       {/* ── LEFT: Inbox ── */}
-      <aside className={`flex flex-col border-r border-gray-200 bg-white shrink-0 ${view === 'chat' ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96`}>
+      <aside className={`flex flex-col border-r border-gray-200 bg-white dark:bg-slate-900 shrink-0 ${view === 'chat' ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96`}>
         <div className="px-5 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-black text-gray-900">
+            <h1 className="text-xl font-black text-gray-900 dark:text-white">
               Mensajes
               {totalUnread > 0 && (
                 <span className="ml-2 bg-primary text-white text-xs font-black rounded-full px-2 py-0.5">{totalUnread}</span>
@@ -190,17 +190,17 @@ export default function Messages() {
               value={searchQ}
               onChange={e => setSearchQ(e.target.value)}
               placeholder="Buscar usuario…"
-              className="w-full bg-gray-100 rounded-xl pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full bg-gray-100 dark:bg-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-400"
             />
           </div>
           {searchResults.length > 0 && (
-            <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div className="mt-2 bg-white dark:bg-slate-900 border border-gray-200 rounded-xl shadow-lg overflow-hidden">
               {searchResults.map(u => (
                 <button key={u.uid} onClick={() => handleSearchResult(u)}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:bg-slate-800/50 transition-colors">
                   <Avatar username={u.username} avatar_url={u.avatar_url} size="w-8 h-8" />
                   <div className="text-left">
-                    <p className="text-sm font-bold text-gray-900">{u.username}</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{u.username}</p>
                     <p className="text-xs text-gray-400">Nivel {u.level || 1}</p>
                   </div>
                 </button>
@@ -226,15 +226,15 @@ export default function Messages() {
             const ts = conv.lastMessageAt?.toDate?.()?.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) || '';
             return (
               <button key={conv.id} onClick={() => openConvo(conv)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 transition-all text-left border-b border-gray-50 ${isActive ? 'bg-orange-50 border-l-2 border-l-primary' : 'hover:bg-gray-50'}`}>
+                className={`w-full flex items-center gap-3 px-4 py-3.5 transition-all text-left border-b border-gray-50 ${isActive ? 'bg-orange-50 border-l-2 border-l-primary' : 'hover:bg-gray-50 dark:bg-slate-800/50'}`}>
                 <Avatar username={otherUsername} avatar_url={otherAvatar} />
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
-                    <p className={`text-sm truncate ${unread > 0 ? 'font-black text-gray-900' : 'font-bold text-gray-800'}`}>{otherUsername}</p>
+                    <p className={`text-sm truncate ${unread > 0 ? 'font-black text-gray-900 dark:text-white' : 'font-bold text-gray-800 dark:text-gray-200'}`}>{otherUsername}</p>
                     <span className="text-[10px] text-gray-400 shrink-0 ml-1">{ts}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className={`text-xs truncate ${unread > 0 ? 'font-medium text-gray-700' : 'text-gray-400'}`}>{conv.lastMessage}</p>
+                    <p className={`text-xs truncate ${unread > 0 ? 'font-medium text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>{conv.lastMessage}</p>
                     {unread > 0 && (
                       <span className="ml-2 bg-primary text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shrink-0">{unread}</span>
                     )}
@@ -253,13 +253,13 @@ export default function Messages() {
             <div className="w-24 h-24 rounded-full bg-orange-50 flex items-center justify-center mb-6">
               <span className="material-symbols-outlined text-primary text-5xl">send</span>
             </div>
-            <h2 className="text-2xl font-black text-gray-900 mb-2">Tus mensajes</h2>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Tus mensajes</h2>
             <p className="text-gray-500 text-sm max-w-xs">Busca un usuario para enviarle un mensaje privado.</p>
           </div>
         ) : (
           <>
             {/* Chat header */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-200 bg-white shrink-0">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-200 bg-white dark:bg-slate-900 shrink-0">
               <button
                 onClick={() => { setView('inbox'); setActiveConvoId(null); setActiveOther(null); }}
                 className="md:hidden text-gray-400 hover:text-primary mr-1">
@@ -270,7 +270,7 @@ export default function Messages() {
               </button>
               <div className="flex-1 min-w-0">
                 <button onClick={() => navigate(`/users/${activeOther?.username}`)}
-                  className="font-black text-gray-900 text-sm hover:text-primary transition-colors truncate block">
+                  className="font-black text-gray-900 dark:text-white text-sm hover:text-primary transition-colors truncate block">
                   {activeOther?.username}
                 </button>
               </div>
@@ -286,7 +286,7 @@ export default function Messages() {
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <Avatar username={activeOther?.username} avatar_url={activeOther?.avatar} size="w-16 h-16" />
-                  <p className="mt-4 font-black text-gray-900">{activeOther?.username}</p>
+                  <p className="mt-4 font-black text-gray-900 dark:text-white">{activeOther?.username}</p>
                   <p className="text-xs text-gray-400 mt-1">Di hola para empezar la conversación 👋</p>
                 </div>
               )}
@@ -301,14 +301,14 @@ export default function Messages() {
                   <div key={msg.id}>
                     {showDate && thisDay && (
                       <div className="flex justify-center my-3">
-                        <span className="text-[10px] text-gray-400 bg-white border border-gray-200 px-3 py-1 rounded-full">{thisDay}</span>
+                        <span className="text-[10px] text-gray-400 bg-white dark:bg-slate-900 border border-gray-200 px-3 py-1 rounded-full">{thisDay}</span>
                       </div>
                     )}
                     <div className={`flex gap-2 items-end ${isMine ? 'flex-row-reverse' : ''}`}>
                       {!isMine && <Avatar username={activeOther?.username} avatar_url={activeOther?.avatar} size="w-7 h-7" />}
                       <div className={`max-w-[72%] flex flex-col gap-0.5 ${isMine ? 'items-end' : 'items-start'}`}>
                         <div className={`px-4 py-2.5 rounded-2xl text-sm leading-snug break-words ${
-                          isMine ? 'bg-orange-500 text-white rounded-br-sm' : 'bg-white text-gray-900 border border-gray-200 shadow-sm rounded-bl-sm'
+                          isMine ? 'bg-orange-500 text-white rounded-br-sm' : 'bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 shadow-sm rounded-bl-sm'
                         }`}>{msg.content}</div>
                         <span className="text-[10px] text-gray-400 mx-1">{ts}</span>
                       </div>
@@ -319,7 +319,7 @@ export default function Messages() {
             </div>
 
             {/* Input bar */}
-            <div className="px-4 py-3.5 border-t border-gray-200 bg-white shrink-0">
+            <div className="px-4 py-3.5 border-t border-gray-200 bg-white dark:bg-slate-900 shrink-0">
               <div className="flex gap-2 items-center">
                 <input
                   ref={inputRef}
@@ -328,7 +328,7 @@ export default function Messages() {
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
                   placeholder={`Mensaje a ${activeOther?.username}…`}
                   maxLength={1000}
-                  className="flex-1 bg-gray-100 rounded-2xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 placeholder:text-gray-400"
+                  className="flex-1 bg-gray-100 dark:bg-slate-800 rounded-2xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 placeholder:text-gray-400"
                 />
                 <button onClick={send} disabled={!input.trim()}
                   className="w-10 h-10 rounded-full bg-orange-500 hover:bg-orange-600 disabled:opacity-40 flex items-center justify-center transition-all active:scale-95 shrink-0">

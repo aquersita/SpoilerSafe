@@ -29,7 +29,7 @@ const GENRE_TINT = {
   Fantasy:       { bg: 'bg-indigo-50',  fg: 'text-indigo-700',  dot: 'bg-indigo-500' },
   Romance:       { bg: 'bg-pink-50',    fg: 'text-pink-700',    dot: 'bg-pink-500' },
   'Sci-Fi':      { bg: 'bg-sky-50',     fg: 'text-sky-700',     dot: 'bg-sky-500' },
-  Mystery:       { bg: 'bg-slate-100',  fg: 'text-slate-700',   dot: 'bg-slate-500' },
+  Mystery:       { bg: 'bg-slate-100 dark:bg-slate-800',  fg: 'text-slate-700 dark:text-slate-300',   dot: 'bg-slate-500' },
   Horror:        { bg: 'bg-zinc-100',   fg: 'text-zinc-800',    dot: 'bg-zinc-700' },
   Thriller:      { bg: 'bg-red-50',     fg: 'text-red-700',     dot: 'bg-red-500' },
   'Slice of Life':{ bg: 'bg-emerald-50',fg: 'text-emerald-700', dot: 'bg-emerald-500' },
@@ -82,7 +82,7 @@ const ICON = {
 /* ─── atoms ─────────────────────────────────────────────────────────────────── */
 const Card = ({ children, className, padded = true }) => (
   <section className={cls(
-    'rounded-2xl bg-white border border-slate-200/70',
+    'rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70',
     'shadow-[0_1px_0_rgba(15,23,42,0.04),0_10px_30px_-18px_rgba(15,23,42,0.18)]',
     padded && 'p-5', className
   )}>{children}</section>
@@ -92,7 +92,7 @@ const SectionHeader = ({ icon, title, hint, action, className }) => (
   <header className={cls('flex items-center justify-between mb-4', className)}>
     <div className="flex items-center gap-2.5 min-w-0 flex-1">
       <span className="grid place-items-center size-7 rounded-lg bg-orange-50 text-orange-600 ring-1 ring-orange-100">{icon}</span>
-      <h3 className="text-[15px] font-bold text-slate-900 tracking-tight truncate">{title}</h3>
+      <h3 className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight truncate">{title}</h3>
       {hint != null && <span className="text-[11px] font-semibold text-slate-400 tabular-nums">{hint}</span>}
     </div>
     {action}
@@ -100,7 +100,7 @@ const SectionHeader = ({ icon, title, hint, action, className }) => (
 );
 
 const Cover = ({ src, seed = '', alt = '', className, children }) => (
-  <div className={cls('relative overflow-hidden bg-slate-200', className)}
+  <div className={cls('relative overflow-hidden bg-slate-200 dark:bg-slate-700', className)}
     style={src ? undefined : { backgroundImage: gradFor(seed) }}>
     {src && <img src={src} alt={alt} className="absolute inset-0 size-full object-cover" loading="lazy" />}
     {!src && (
@@ -113,11 +113,11 @@ const Cover = ({ src, seed = '', alt = '', className, children }) => (
 );
 
 const EmptyState = ({ icon, title, hint }) => (
-  <div className="grid place-items-center text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-    <span className="grid place-items-center size-10 rounded-xl bg-white ring-1 ring-slate-200 text-slate-400 mb-2">
+  <div className="grid place-items-center text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50">
+    <span className="grid place-items-center size-10 rounded-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700 text-slate-400 mb-2">
       <Svg path={icon} className="size-4" />
     </span>
-    <div className="text-[13px] font-bold text-slate-700">{title}</div>
+    <div className="text-[13px] font-bold text-slate-700 dark:text-slate-300">{title}</div>
     {hint && <div className="text-[12px] text-slate-500 mt-0.5 max-w-xs">{hint}</div>}
   </div>
 );
@@ -131,7 +131,7 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
   const bannerSrc = profile?.banner_url || equippedBanner?.image || null;
   return (
     <div className="relative">
-      <div className="relative h-44 sm:h-56 rounded-[28px] overflow-hidden ring-1 ring-slate-200/70">
+      <div className="relative h-44 sm:h-56 rounded-[28px] overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700/70 dark:ring-slate-700/50">
         <Cover src={bannerSrc} seed={profile?.username || 'banner'} alt="" className="size-full">
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/15 to-transparent" />
           <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_85%_-10%,rgba(249,115,22,0.45),transparent_55%)]" />
@@ -152,13 +152,13 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
           <div className="relative shrink-0">
             <div className="p-[3px] rounded-2xl"
               style={{ background: equippedFrame?.preview_color || 'linear-gradient(135deg,#f97316,#fb923c)' }}>
-              <div className="rounded-[14px] bg-white p-1">
+              <div className="rounded-[14px] bg-white dark:bg-slate-900 p-1">
                 <Cover src={profile?.avatar_url} seed={profile?.username} alt={profile?.username}
                   className="size-24 sm:size-28 rounded-xl" />
               </div>
             </div>
             {equippedEmoji && (
-              <span className="absolute -bottom-1 -right-1 size-9 rounded-xl bg-white grid place-items-center ring-2 ring-white shadow-md overflow-hidden">
+              <span className="absolute -bottom-1 -right-1 size-9 rounded-xl bg-white dark:bg-slate-900 grid place-items-center ring-2 ring-white shadow-md overflow-hidden">
                 {equippedEmoji.image
                   ? <img src={equippedEmoji.image} alt={equippedEmoji.name} className="size-7 object-contain" />
                   : <span className="text-xl">{equippedEmoji.emoji || '⭐'}</span>}
@@ -169,7 +169,7 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
           {/* identity */}
           <div className="flex-1 min-w-0 sm:pb-1">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              <h1 className="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-900 leading-none">
+              <h1 className="text-[26px] sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
                 {profile?.username}
               </h1>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[11px] font-bold uppercase tracking-wider">
@@ -181,7 +181,7 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
                 </span>
               )}
             </div>
-            {profile?.bio && <p className="mt-2 text-sm text-slate-600 leading-relaxed max-w-xl line-clamp-2">{profile.bio}</p>}
+            {profile?.bio && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl line-clamp-2">{profile.bio}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-slate-500">
               {profile?.location && <span className="inline-flex items-center gap-1"><Svg path={ICON.pin} className="size-3.5" />{profile.location}</span>}
               <span className="inline-flex items-center gap-1">
@@ -202,19 +202,19 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
                 <button onClick={onFollow}
                   className={cls('inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition',
                     isFollowing
-                      ? 'bg-white border border-orange-300 text-orange-600 hover:bg-orange-50'
+                      ? 'bg-white dark:bg-slate-900 border border-orange-300 text-orange-600 hover:bg-orange-50'
                       : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20')}>
                   <Svg path={isFollowing ? ICON.userRm : ICON.userPlus} className="size-4" />
                   {isFollowing ? 'Siguiendo' : 'Seguir'}
                 </button>
                 <button onClick={onMessage}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-sm font-semibold transition">
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 hover:border-slate-300 text-slate-700 dark:text-slate-300 text-sm font-semibold transition">
                   <Svg path={ICON.message} className="size-4" />Mensaje
                 </button>
               </>
             )}
             <button aria-label="Compartir"
-              className="inline-flex items-center justify-center size-10 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-600 transition">
+              className="inline-flex items-center justify-center size-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 hover:border-slate-300 text-slate-600 dark:text-slate-400 transition">
               <Svg path={ICON.share} className="size-4" />
             </button>
           </div>
@@ -223,7 +223,7 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
         {/* XP rail */}
         <div className="mt-5 flex items-center gap-3">
           <span className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">XP {fmt(profile?.points)}</span>
-          <div className="relative flex-1 h-1.5 rounded-full bg-slate-200/70 overflow-hidden">
+          <div className="relative flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700/70 overflow-hidden">
             <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-orange-500 to-amber-400" style={{ width: `${xp}%` }} />
           </div>
           <span className="text-[11px] font-semibold text-slate-400 tabular-nums">{Math.round(xp)}% al N{(profile?.level ?? 1) + 1}</span>
@@ -235,12 +235,12 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
 
 /* ─── Quick stats ───────────────────────────────────────────────────────────── */
 const QuickStat = ({ icon, label, value, accent = 'text-orange-600', tone = 'bg-orange-50' }) => (
-  <div className="relative flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200/70 shadow-[0_1px_0_rgba(15,23,42,0.04)] overflow-hidden">
+  <div className="relative flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 shadow-[0_1px_0_rgba(15,23,42,0.04)] overflow-hidden">
     <span className={cls('grid place-items-center size-10 rounded-xl ring-1 ring-inset ring-current/10', tone, accent)}>
       <Svg path={icon} className="size-5" />
     </span>
     <div className="min-w-0">
-      <div className="text-[22px] font-extrabold tracking-tight text-slate-900 leading-none tabular-nums">{value}</div>
+      <div className="text-[22px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-none tabular-nums">{value}</div>
       <div className="mt-1 text-[10.5px] font-bold tracking-[0.14em] uppercase text-slate-400">{label}</div>
     </div>
     <span className="absolute -right-6 -bottom-6 size-20 rounded-full bg-gradient-to-br from-orange-100/70 to-transparent" />
@@ -253,7 +253,7 @@ const AnimeCard = ({ anime }) => {
   const path = anime.media_type === 'manga' ? `/manga/${anime.id}` : `/anime/${anime.id}`;
   return (
     <button onClick={() => navigate(path)} className="group block w-[148px] shrink-0 text-left">
-      <div className="relative aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-slate-200/70 bg-slate-100">
+      <div className="relative aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700/70 dark:ring-slate-700/50 bg-slate-100 dark:bg-slate-800">
         <Cover src={anime.coverImage} seed={anime.title} alt={anime.title} className="size-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
         {anime.averageScore != null && (
@@ -284,11 +284,11 @@ const HCarousel = ({ children }) => {
         {React.Children.map(children, (c) => <div className="snap-start">{c}</div>)}
       </div>
       <button onClick={() => scroll(-1)} aria-label="Anterior"
-        className="hidden md:grid place-items-center absolute -left-3 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white border border-slate-200 shadow-md text-slate-600 hover:text-orange-600 hover:border-orange-200 transition">
+        className="hidden md:grid place-items-center absolute -left-3 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white dark:bg-slate-900 border border-slate-200 shadow-md text-slate-600 dark:text-slate-400 hover:text-orange-600 hover:border-orange-200 transition">
         <Svg path={ICON.chevL} className="size-4" />
       </button>
       <button onClick={() => scroll(1)} aria-label="Siguiente"
-        className="hidden md:grid place-items-center absolute -right-3 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white border border-slate-200 shadow-md text-slate-600 hover:text-orange-600 hover:border-orange-200 transition">
+        className="hidden md:grid place-items-center absolute -right-3 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white dark:bg-slate-900 border border-slate-200 shadow-md text-slate-600 dark:text-slate-400 hover:text-orange-600 hover:border-orange-200 transition">
         <Svg path={ICON.chevR} className="size-4" />
       </button>
     </div>
@@ -381,14 +381,14 @@ const FeaturedAnimeBlock = ({ anime }) => {
           <h4 className="text-lg sm:text-xl font-extrabold tracking-tight leading-tight line-clamp-2">{anime.title}</h4>
           <div className="flex items-center gap-1.5 flex-wrap">
             {(anime.genres || []).slice(0, 4).map((g) => (
-              <span key={g} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-white/85 text-[10.5px] font-semibold ring-1 ring-white/15">
+              <span key={g} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white dark:bg-slate-900/10 text-white/85 text-[10.5px] font-semibold ring-1 ring-white/15">
                 <span className={cls('size-1.5 rounded-full', tintFor(g).dot)} />{g}
               </span>
             ))}
           </div>
           <div className="mt-1 flex items-center gap-2">
             <button onClick={() => navigate(`/${anime.media_type === 'manga' ? 'manga' : 'anime'}/${anime.id}`)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-slate-900 text-[12px] font-bold hover:bg-orange-100 transition whitespace-nowrap">
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-[12px] font-bold hover:bg-orange-100 transition whitespace-nowrap">
               Ir a la ficha <Svg path={ICON.arrowR} className="size-3.5" />
             </button>
           </div>
@@ -401,15 +401,15 @@ const FeaturedAnimeBlock = ({ anime }) => {
 const MiniStat = ({ icon, label, value, max, tone, accent }) => {
   const pct = max ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
-    <div className="relative p-4 rounded-xl bg-slate-50/70 border border-slate-200/60 overflow-hidden">
+    <div className="relative p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/60 overflow-hidden">
       <div className="flex items-center justify-between gap-2">
         <span className={cls('grid place-items-center size-9 rounded-lg', tone, accent)}>
           <Svg path={icon} className="size-4" />
         </span>
         <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</span>
       </div>
-      <div className="mt-3 text-[26px] leading-none font-extrabold tracking-tight text-slate-900 tabular-nums">{fmt(value)}</div>
-      <div className="mt-3 h-1.5 rounded-full bg-white ring-1 ring-slate-200 overflow-hidden">
+      <div className="mt-3 text-[26px] leading-none font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">{fmt(value)}</div>
+      <div className="mt-3 h-1.5 rounded-full bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden">
         <div className={cls('h-full rounded-full', accent.replace('text-', 'bg-'))} style={{ width: `${Math.max(6, pct)}%` }} />
       </div>
     </div>
@@ -484,7 +484,7 @@ const RankCard = ({ profile }) => {
           <span className="text-white/60 font-semibold">Progreso al N{(profile?.level ?? 1) + 1}</span>
           <span className="font-bold tabular-nums text-orange-300">{Math.round(xp)}%</span>
         </div>
-        <div className="h-2 rounded-full bg-white/10 overflow-hidden ring-1 ring-white/5">
+        <div className="h-2 rounded-full bg-white dark:bg-slate-900/10 overflow-hidden ring-1 ring-white/5">
           <div className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-300 shadow-[0_0_12px_rgba(251,146,60,0.55)]"
             style={{ width: `${xp}%` }} />
         </div>
@@ -494,11 +494,11 @@ const RankCard = ({ profile }) => {
         </div>
       </div>
       <div className="relative mt-4 grid grid-cols-2 gap-2">
-        <div className="rounded-lg bg-white/5 ring-1 ring-white/5 px-3 py-2">
+        <div className="rounded-lg bg-white dark:bg-slate-900/5 ring-1 ring-white/5 px-3 py-2">
           <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">XP Total</div>
           <div className="text-[15px] font-bold tabular-nums">{fmt(profile?.points)}</div>
         </div>
-        <div className="rounded-lg bg-white/5 ring-1 ring-white/5 px-3 py-2">
+        <div className="rounded-lg bg-white dark:bg-slate-900/5 ring-1 ring-white/5 px-3 py-2">
           <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Spoilers Safe</div>
           <div className="text-[15px] font-bold tabular-nums">{fmt(profile?.spoilers_safe)}</div>
         </div>
@@ -519,14 +519,14 @@ const StatsListCard = ({ stats, profile }) => (
         { key: 'recommendations',  label: 'Recomendaciones',  icon: ICON.sparkle },
       ].map((s) => (
         <li key={s.key} className="flex items-center justify-between py-2.5 first:pt-1 last:pb-1">
-          <span className="flex items-center gap-2.5 text-[13px] text-slate-700">
+          <span className="flex items-center gap-2.5 text-[13px] text-slate-700 dark:text-slate-300">
             <Svg path={s.icon} className="size-4 text-slate-400" />{s.label}
           </span>
-          <span className="text-[14px] font-bold tabular-nums text-slate-900">{fmt(stats?.[s.key])}</span>
+          <span className="text-[14px] font-bold tabular-nums text-slate-900 dark:text-white">{fmt(stats?.[s.key])}</span>
         </li>
       ))}
       <li className="flex items-center justify-between py-2.5 last:pb-1">
-        <span className="flex items-center gap-2.5 text-[13px] text-slate-700">
+        <span className="flex items-center gap-2.5 text-[13px] text-slate-700 dark:text-slate-300">
           <Svg path={ICON.shield} className="size-4 text-orange-500" />Spoilers Safe
         </span>
         <span className="inline-flex items-center gap-1 text-[14px] font-bold tabular-nums text-orange-700">
@@ -540,10 +540,10 @@ const StatsListCard = ({ stats, profile }) => (
 /* ─── Edit modal ────────────────────────────────────────────────────────────── */
 const EditModal = ({ data, onChange, onSave, onClose, saving }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md p-6">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg font-bold text-slate-900">Editar Perfil</h2>
-        <button onClick={onClose} className="grid place-items-center size-8 rounded-lg hover:bg-slate-100 text-slate-500">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Editar Perfil</h2>
+        <button onClick={onClose} className="grid place-items-center size-8 rounded-lg hover:bg-slate-100 dark:bg-slate-800 text-slate-500">
           <Svg path={ICON.x} className="size-4" />
         </button>
       </div>
@@ -554,21 +554,21 @@ const EditModal = ({ data, onChange, onSave, onClose, saving }) => (
           { key: 'location',   label: 'Ubicación',      placeholder: 'Madrid, España' },
         ].map(f => (
           <div key={f.key}>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">{f.label}</label>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{f.label}</label>
             <input value={data[f.key] || ''} onChange={e => onChange(f.key, e.target.value)}
               placeholder={f.placeholder}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400" />
           </div>
         ))}
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Bio</label>
+          <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Bio</label>
           <textarea value={data.bio || ''} onChange={e => onChange('bio', e.target.value)}
             placeholder="Cuéntanos algo sobre ti…" rows={3}
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
         </div>
       </div>
       <div className="flex gap-2 mt-6 justify-end">
-        <button onClick={onClose} className="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">
+        <button onClick={onClose} className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 dark:bg-slate-800">
           Cancelar
         </button>
         <button onClick={onSave} disabled={saving}
@@ -638,29 +638,29 @@ const RewardItem = ({ r, isOwner, onEquip }) => {
       disabled={locked || r.is_equipped || !isOwner}
       className={cls(
         'group relative text-left p-3 rounded-xl border transition w-full',
-        r.is_equipped ? 'border-orange-300 ring-1 ring-orange-200 bg-orange-50/40' : 'border-slate-200 hover:border-slate-300 bg-white',
+        r.is_equipped ? 'border-orange-300 ring-1 ring-orange-200 bg-orange-50/40' : 'border-slate-200 hover:border-slate-300 bg-white dark:bg-slate-900',
         locked && 'opacity-60 cursor-not-allowed',
       )}
     >
       <div className="flex items-center gap-3">
         {r.type === 'emoji' ? (
-          <span className="grid place-items-center size-12 rounded-lg bg-slate-50 text-2xl ring-1 ring-slate-200 overflow-hidden">
+          <span className="grid place-items-center size-12 rounded-lg bg-slate-50 dark:bg-slate-800 text-2xl ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden">
             {r.image
               ? <img src={r.image} alt={r.name} className="size-9 object-contain" />
               : <span>{r.emoji || '⭐'}</span>}
           </span>
         ) : r.type === 'banner' && r.image ? (
-          <span className="w-20 h-10 rounded-lg ring-1 ring-slate-200 overflow-hidden shrink-0">
+          <span className="w-20 h-10 rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden shrink-0">
             <img src={r.image} alt={r.name} className="w-full h-full object-cover" />
           </span>
         ) : (
           <span
-            className="size-12 rounded-lg ring-1 ring-slate-200 shrink-0"
+            className="size-12 rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 shrink-0"
             style={{ background: r.preview_color || (r.type === 'banner' ? gradFor(r.name) : '#f97316') }}
           />
         )}
         <div className="flex-1 min-w-0">
-          <div className="text-[12.5px] font-bold text-slate-900 truncate">{r.name}</div>
+          <div className="text-[12.5px] font-bold text-slate-900 dark:text-white truncate">{r.name}</div>
           <div className="mt-0.5 text-[11px] text-slate-500">
             {locked
               ? r.unlock_label
@@ -700,7 +700,7 @@ const RewardsCard = ({ profile, stats, isOwner, onEquip }) => {
     <Card padded={false}>
       <div className="p-5 pb-3">
         <SectionHeader icon={<Svg path={ICON.sparkle} className="size-3.5" />} title="Recompensas" className="mb-3" />
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100/70">
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/70">
           {REW_TABS.map(t => (
             <button
               key={t.id}
@@ -708,7 +708,7 @@ const RewardsCard = ({ profile, stats, isOwner, onEquip }) => {
               onClick={() => setTab(t.id)}
               className={cls(
                 'py-1.5 rounded-lg text-[12px] font-semibold transition',
-                tab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700',
+                tab === t.id ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-300',
               )}
             >
               {t.label}
@@ -884,7 +884,7 @@ const UserProfile = ({
   );
 
   return (
-    <div className="min-h-screen bg-[#f6faff] text-slate-800 antialiased">
+    <div className="min-h-screen bg-[#f6faff] text-slate-800 dark:text-slate-200 antialiased">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
 
         <ProfileHeader

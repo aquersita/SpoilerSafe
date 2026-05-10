@@ -82,6 +82,7 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
     };
 
     return (
+        <>
         <nav className="fixed top-0 w-full z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-border-light dark:border-gray-800 transition-colors duration-300 shadow-sm">
             <div className="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center space-x-8">
@@ -268,37 +269,38 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
                     </button>
                 </div>
             </div>
+        </nav>
 
-            {showLogoutConfirm && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6">
-                        <div className="flex items-center gap-3 mb-3">
-                            <span className="grid place-items-center size-10 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500">
-                                <span className="material-symbols-outlined">logout</span>
-                            </span>
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">¿Cerrar sesión?</h2>
-                        </div>
-                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-6">
-                            Vas a salir de tu cuenta. ¿Seguro que quieres continuar?
-                        </p>
-                        <div className="flex gap-2 justify-end">
-                            <button
-                                onClick={() => setShowLogoutConfirm(false)}
-                                className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={confirmLogout}
-                                className="px-5 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
-                            >
-                                Cerrar sesión
-                            </button>
-                        </div>
+        {showLogoutConfirm && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                        <span className="grid place-items-center size-10 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500">
+                            <span className="material-symbols-outlined">logout</span>
+                        </span>
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white">¿Cerrar sesión?</h2>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-gray-300 mb-6">
+                        Vas a salir de tu cuenta. ¿Seguro que quieres continuar?
+                    </p>
+                    <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={() => setShowLogoutConfirm(false)}
+                            className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={confirmLogout}
+                            className="px-5 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                        >
+                            Cerrar sesión
+                        </button>
                     </div>
                 </div>
-            )}
-        </nav>
+            </div>
+        )}
+        </>
     );
 };
 

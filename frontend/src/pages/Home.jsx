@@ -521,7 +521,7 @@ const Home = ({ popularAnime, isBackendUp, backendStatus }) => {
                     <a className="hover:text-primary transition-colors text-white" href="#">Privacidad</a>
                     <a className="hover:text-primary transition-colors text-white" href="#">Contacto</a>
                 </div>
-                <p>© 2024 SpoilerSafe. Anime Streaming Concept.</p>
+                <p>© 2026 SpoilerSafe. Anime Streaming Concept.</p>
             </footer>
         </React.Fragment>
     );

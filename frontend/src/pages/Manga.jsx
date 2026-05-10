@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTrendingManga, searchManga } from '../services/mangaService';
+import { getTrendingManga, getPopularManga, searchManga } from '../services/mangaService';
 import { askAgeGate } from '../utils/ageGate';
 
 const Manga = () => {
@@ -25,12 +25,9 @@ const Manga = () => {
         const fetchInitial = async () => {
             setLoading(true);
             try {
-                const [trendRes, catRes] = await Promise.all([
-                    getTrendingManga(),
-                    searchManga('')
-                ]);
+                const [trendRes, popRes] = await Promise.all([getTrendingManga(), getPopularManga()]);
                 setTrending(trendRes.data?.Page?.media || []);
-                setCatalog(catRes.data?.Page?.media || []);
+                setCatalog(popRes.data?.Page?.media || []);
             } catch (err) {
                 console.error("Error fetching manga:", err);
             } finally {

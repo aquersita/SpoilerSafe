@@ -76,10 +76,13 @@ export default function Messages() {
     return () => unsubMsgs.current?.();
   }, [activeConvoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-scroll to latest message
+  // Auto-scroll to latest message + mark new ones as read while chat is open
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [messages]);
+    if (activeConvoId && firebaseUser?.uid && messages.length > 0) {
+      markRead(activeConvoId, firebaseUser.uid);
+    }
+  }, [messages, activeConvoId, firebaseUser?.uid]);
 
   // Focus input when a chat is opened
   useEffect(() => {

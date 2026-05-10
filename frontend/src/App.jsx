@@ -21,7 +21,6 @@ import NewReleases from './pages/NewReleases';
 import Watchlist from './pages/Watchlist';
 import History from './pages/History';
 import AdminPanel from './pages/AdminPanel'
-import ChatWidget from './components/ChatWidget'
 import Messages from './pages/Messages';
 import { useAuth } from './context/AuthContext';
 
@@ -53,8 +52,6 @@ function App() {
         },
       }} />
       <Sidebar />
-
-      <ChatWidget />
 
       <main className="md:pl-16 pt-16 min-h-screen">
         <Routes>

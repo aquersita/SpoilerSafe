@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Car Manager</h1>
+
+<div class="card">
+    <h2>Add a Car</h2>
+    <form action="/cars" method="post">
+        <label for="brand">Brand:</label>
+        <input type="text" id="brand" name="brand" required>
+
+        <label for="model">Model:</label>
+        <input type="text" id="model" name="model" required>
+
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" step="0.01" required>
+
+        <input type="submit" value="Add Car">
+    </form>
+</div>
+
+<div class="card">
+    <h2>Search Cars</h2>
+    <form action="/cars" method="get">
+        <input type="text" name="search" placeholder="Search by brand or model">
+        <input type="submit" value="Search">
+    </form>
+</div>
+
+<div class="card">
+    <h2>List of Cars</h2>
+    <ul>
+        {% for car in cars %}
+        <li>{{ car.brand }} {{ car.model }} - ${{ car.price }}</li>
+        {% else %}
+        <li>No cars found.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

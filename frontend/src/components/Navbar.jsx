@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { searchAnime } from '../services/animeService';
 import { searchUsers } from '../services/userService';
+import NotificationDropdown from './NotificationDropdown';
 
 const Navbar = ({ onLoginClick, onLogoClick }) => {
     const navigate = useNavigate();
@@ -31,6 +32,8 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [isExploreOpen, setIsExploreOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -61,9 +64,21 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
         setIsMenuOpen(false);
     };
 
-    const handleLogout = async () => {
+    const confirmLogout = async () => {
+        setShowLogoutConfirm(false);
         await logout();
         navigate('/');
+    };
+
+    const handleSearchSubmit = (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const q = query.trim();
+        if (!q) return;
+        setShowResults(false);
+        setQuery('');
+        setIsMobileSearchOpen(false);
+        navigate(`/catalog?search=${encodeURIComponent(q)}`);
     };
 
     return (
@@ -128,6 +143,7 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
                                 type="text"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
+                                onKeyDown={handleSearchSubmit}
                             />
                         </div>
                         {showResults && (
@@ -207,9 +223,12 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
                         <button onClick={() => setDarkMode(!darkMode)} className="text-gray-500 hover:text-primary transition-colors" title={darkMode ? 'Modo claro' : 'Modo oscuro'}>
                             <span className="material-symbols-outlined">{darkMode ? 'light_mode' : 'dark_mode'}</span>
                         </button>
-                        <button onClick={() => toast('No tienes notificaciones nuevas', { icon: '🔔' })} className="text-gray-500 hover:text-primary transition-colors">
-                            <span className="material-icons-outlined">notifications</span>
-                        </button>
+                        <div className="relative flex items-center">
+                            <button onClick={() => setShowNotifications(!showNotifications)} className="text-gray-500 hover:text-primary transition-colors">
+                                <span className="material-icons-outlined">notifications</span>
+                            </button>
+                            {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
+                        </div>
                         {user?.is_admin && (
                             <button onClick={() => navigate('/admin')} className="text-red-500 hover:text-red-600 transition-colors" title="Admin Panel">
                                 <span className="material-symbols-outlined">admin_panel_settings</span>
@@ -225,7 +244,7 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
                                     />
                                     <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                                 </div>
-                                <button onClick={handleLogout} className="text-gray-500 hover:text-red-500 transition-colors" title="Cerrar sesión">
+                                <button onClick={() => setShowLogoutConfirm(true)} className="text-gray-500 hover:text-red-500 transition-colors" title="Cerrar sesión">
                                     <span className="material-symbols-outlined text-[20px]">logout</span>
                                 </button>
                             </div>
@@ -249,6 +268,36 @@ const Navbar = ({ onLoginClick, onLogoClick }) => {
                     </button>
                 </div>
             </div>
+
+            {showLogoutConfirm && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                            <span className="grid place-items-center size-10 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500">
+                                <span className="material-symbols-outlined">logout</span>
+                            </span>
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">¿Cerrar sesión?</h2>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-gray-300 mb-6">
+                            Vas a salir de tu cuenta. ¿Seguro que quieres continuar?
+                        </p>
+                        <div className="flex gap-2 justify-end">
+                            <button
+                                onClick={() => setShowLogoutConfirm(false)}
+                                className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmLogout}
+                                className="px-5 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                            >
+                                Cerrar sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </nav>
     );
 };

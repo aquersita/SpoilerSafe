@@ -28,7 +28,6 @@ const AnimeDetails = ({ user }) => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        document.documentElement.classList.remove('dark');
 
         const fetchAnime = async () => {
             setLoading(true);
@@ -41,17 +40,20 @@ const AnimeDetails = ({ user }) => {
                     setAgeGateVisible(true);
                 }
 
-                // Save to history
-                const historyItem = {
-                    title: mediaData.title?.romaji || mediaData.title?.english || 'Anime',
-                    image: mediaData.coverImage?.large,
-                    path: `/anime/${id}`,
-                    visitedAt: new Date().toISOString()
-                };
-                const existing = JSON.parse(localStorage.getItem('spoilersafe_history') || '[]');
-                const filtered = existing.filter(h => h.path !== historyItem.path);
-                filtered.unshift(historyItem);
-                localStorage.setItem('spoilersafe_history', JSON.stringify(filtered.slice(0, 50)));
+                // Save to history (scoped per logged-in user)
+                if (currentUser?.uid) {
+                    const historyItem = {
+                        title: mediaData.title?.romaji || mediaData.title?.english || 'Anime',
+                        image: mediaData.coverImage?.large,
+                        path: `/anime/${id}`,
+                        visitedAt: new Date().toISOString()
+                    };
+                    const key = `spoilersafe_history_${currentUser.uid}`;
+                    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                    const filtered = existing.filter(h => h.path !== historyItem.path);
+                    filtered.unshift(historyItem);
+                    localStorage.setItem(key, JSON.stringify(filtered.slice(0, 50)));
+                }
 
 if (currentUser?.uid) {
                     const uid = currentUser.uid;

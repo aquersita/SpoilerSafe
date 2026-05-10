@@ -60,18 +60,24 @@ export async function markChapterRead(uid, mangaId, chapterNum) {
 
   if (read.includes(chapterNum)) return { points_earned: 0, already_read: true };
 
+  // Save progress first — this is the critical write
   await setDoc(ref, { read: arrayUnion(chapterNum) }, { merge: true });
 
-  const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
-  if (userSnap.exists()) {
-    const currentPoints = (userSnap.data().points || 0) + XP_PER_CHAPTER;
-    const newLevel = computeLevel(currentPoints);
-    await updateDoc(userRef, {
-      points: increment(XP_PER_CHAPTER),
-      level: newLevel,
-      'stats.manga_chapters': increment(1),
-    });
+  // XP update is best-effort; progress is already saved above
+  try {
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const currentPoints = (userSnap.data().points || 0) + XP_PER_CHAPTER;
+      const newLevel = computeLevel(currentPoints);
+      await updateDoc(userRef, {
+        points: increment(XP_PER_CHAPTER),
+        level: newLevel,
+        'stats.manga_chapters': increment(1),
+      });
+    }
+  } catch (err) {
+    console.warn('markChapterRead: XP update failed (progress saved)', err);
   }
 
   return { points_earned: XP_PER_CHAPTER, already_read: false };

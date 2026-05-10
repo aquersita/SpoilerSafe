@@ -11,6 +11,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // One-time cleanup: legacy global history bucket pre-dated per-user scoping
+    // and could leak browsing between accounts on the same browser.
+    localStorage.removeItem('spoilersafe_history');
+
     return onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {

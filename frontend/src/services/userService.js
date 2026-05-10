@@ -109,13 +109,30 @@ export async function checkIsFollowing(followerUid, followedUid) {
 export async function followUser(followerUid, followedUid) {
   await setDoc(doc(db, 'users', followerUid, 'following', followedUid), { followedAt: serverTimestamp() });
   await updateDoc(doc(db, 'users', followerUid), { following_count: increment(1) });
-  await updateDoc(doc(db, 'users', followedUid), { followers_count: increment(1) });
+  try {
+    await updateDoc(doc(db, 'users', followedUid), { followers_count: increment(1) });
+    const snap = await getDoc(doc(db, 'users', followerUid));
+    if (snap.exists()) {
+      const u = snap.data();
+      await setDoc(doc(collection(db, 'users', followedUid, 'notifications')), {
+        type: 'follow',
+        title: 'Nuevo seguidor',
+        body: `${u.username} ha empezado a seguirte.`,
+        image: u.avatar_url || '',
+        link: `/users/${u.username}`,
+        createdAt: serverTimestamp(),
+        read: false
+      });
+    }
+  } catch { /* requires updated Firestore rules — follow still recorded */ }
 }
 
 export async function unfollowUser(followerUid, followedUid) {
   await deleteDoc(doc(db, 'users', followerUid, 'following', followedUid));
   await updateDoc(doc(db, 'users', followerUid), { following_count: increment(-1) });
-  await updateDoc(doc(db, 'users', followedUid), { followers_count: increment(-1) });
+  try {
+    await updateDoc(doc(db, 'users', followedUid), { followers_count: increment(-1) });
+  } catch { /* requires updated Firestore rules — unfollow still recorded */ }
 }
 
 export { computeLevel };

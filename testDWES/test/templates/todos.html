@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>My Todo List</h1>
+
+<div class="card">
+    <form action="{{ url_for('todo_bp.todos') }}" method="post">
+        <input type="text" name="content" placeholder="Enter a new task" required>
+        <input type="submit" value="Add Task">
+    </form>
+</div>
+
+<div class="card">
+    <ul>
+        {% for todo in todos %}
+        <li>
+            {% if todo.completed %}
+            <strike>{{ todo.content }}</strike>
+            {% else %}
+            {{ todo.content }}
+            {% endif %}
+            <a href="{{ url_for('todo_bp.toggle_todo', todo_id=todo.id) }}">[{% if todo.completed %}Mark Undone{% else
+                %}Mark Done{% endif %}]</a>
+        </li>
+        {% else %}
+        <li>No tasks yet.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

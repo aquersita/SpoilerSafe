@@ -5,7 +5,13 @@ import { db } from '../lib/firebase';
 
 export async function getFavorites(uid) {
   const snap = await getDocs(collection(db, 'favorites', uid, 'items'));
-  return snap.docs.map(d => d.data());
+  const list = snap.docs.map(d => d.data());
+  list.sort((a, b) => {
+    const ta = a.added_at?.toMillis ? a.added_at.toMillis() : (a.added_at || 0);
+    const tb = b.added_at?.toMillis ? b.added_at.toMillis() : (b.added_at || 0);
+    return tb - ta;
+  });
+  return list;
 }
 
 export async function addFavorite(uid, mediaData) {

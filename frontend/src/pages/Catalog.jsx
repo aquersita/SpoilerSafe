@@ -9,12 +9,13 @@ const Catalog = () => {
 
     const searchParams = new URLSearchParams(location.search);
     const initialSort = searchParams.get('sort') || 'TRENDING_DESC';
+    const initialSearch = searchParams.get('search') || '';
 
     const [animes, setAnimes] = useState([]);
     const [page, setPage] = useState(1);
     const [sort, setSort] = useState(initialSort);
-    const [searchInput, setSearchInput] = useState('');
-    const [query, setQuery] = useState('');
+    const [searchInput, setSearchInput] = useState(initialSearch);
+    const [query, setQuery] = useState(initialSearch);
 
     const [hasNextPage, setHasNextPage] = useState(true);
     const [loading, setLoading] = useState(false);
@@ -65,11 +66,21 @@ const Catalog = () => {
         return () => clearTimeout(timer);
     }, [searchInput]);
 
+    // Sync from URL when navbar (or external nav) updates ?search=
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const urlSearch = params.get('search') || '';
+        setSearchInput(urlSearch);
+        setQuery(urlSearch);
+    }, [location.search]);
+
     useEffect(() => {
         setPage(1);
         fetchCatalog(1, sort, query, false);
-        const newUrl = `/catalog?sort=${sort}`;
-        window.history.replaceState(null, '', newUrl);
+        const params = new URLSearchParams();
+        params.set('sort', sort);
+        if (query) params.set('search', query);
+        window.history.replaceState(null, '', `/catalog?${params.toString()}`);
     }, [sort, query]);
 
     const handleLoadMore = () => {

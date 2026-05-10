@@ -18,7 +18,6 @@ const MangaDetails = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        document.documentElement.classList.remove('dark');
 
         const fetchMangaDetails = async () => {
             setLoading(true);
@@ -82,7 +81,7 @@ const MangaDetails = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
         );
@@ -90,8 +89,8 @@ const MangaDetails = () => {
 
     if (!manga) {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-500">
-                <span className="material-symbols-outlined text-6xl mb-4 text-gray-300">menu_book</span>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                <span className="material-symbols-outlined text-6xl mb-4 text-gray-300 dark:text-gray-600">menu_book</span>
                 <p>No se ha encontrado el manga.</p>
                 <button onClick={() => navigate('/manga')} className="mt-4 text-primary font-bold hover:underline">
                     Volver al Catálogo
@@ -104,11 +103,12 @@ const MangaDetails = () => {
     const cleanDescription = manga.description
         ? manga.description.replace(/<[^>]*>?/gm, '')
         : "Sin sinopsis disponible.";
-    const totalChapters = manga.chapters || 0;
+    const knownChapters = manga.chapters && manga.chapters > 0;
     const readCount = readChapters.size;
+    const totalChapters = knownChapters ? manga.chapters : Math.max(readCount + 50, 100);
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-16">
             {/* Toast */}
             {toast && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-bold">
@@ -123,20 +123,20 @@ const MangaDetails = () => {
                 ) : (
                     <div className="w-full h-full bg-gradient-to-r from-gray-800 to-gray-900" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-gray-50/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-gray-50/20 dark:via-gray-900/20 to-transparent" />
             </div>
 
-            <div className="max-w-[1200px] mx-auto px-4 md:px-8 relative -mt-32 md:-mt-48 z-10 flex flex-col md:flex-row gap-8">
+            <div className="max-w-4xl mx-auto px-4 md:px-8 relative -mt-20 md:-mt-32 z-10 flex flex-col md:flex-row gap-8">
                 {/* Left Column */}
-                <div className="w-48 md:w-64 shrink-0 mx-auto md:mx-0">
+                <div className="w-36 md:w-48 shrink-0 mx-auto md:mx-0">
                     <img
                         src={manga.coverImage.extraLarge}
                         alt={title}
-                        className="w-full rounded-xl shadow-2xl border-4 border-white bg-white"
+                        className="w-full rounded-xl shadow-2xl border-4 border-white dark:border-gray-800 bg-white dark:bg-gray-800"
                     />
                     <button
                         onClick={() => navigate('/manga')}
-                        className="mt-6 w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 hover:text-primary hover:border-primary font-bold py-3 px-4 rounded-lg shadow-sm transition-colors"
+                        className="mt-6 w-full flex items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-primary hover:border-primary dark:hover:border-primary font-bold py-3 px-4 rounded-lg shadow-sm transition-colors"
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
                         Volver a Mangas
@@ -144,16 +144,16 @@ const MangaDetails = () => {
                 </div>
 
                 {/* Right Column */}
-                <div className="flex-1 mt-4 md:mt-24 bg-white md:bg-transparent p-6 md:p-0 rounded-xl shadow-sm md:shadow-none border md:border-none border-gray-100">
+                <div className="flex-1 mt-4 md:mt-16 bg-white dark:bg-gray-800 md:bg-transparent md:dark:bg-transparent p-6 md:p-0 rounded-xl shadow-sm md:shadow-none border md:border-none border-gray-100 dark:border-gray-700">
                     <div className="flex flex-wrap gap-2 mb-3">
                         {manga.genres && manga.genres.map(genre => (
-                            <span key={genre} className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full uppercase">
+                            <span key={genre} className="bg-primary/10 dark:bg-primary/20 text-primary text-xs font-bold px-2 py-1 rounded-full uppercase">
                                 {genre}
                             </span>
                         ))}
                     </div>
 
-                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-2 leading-tight">{title}</h1>
+                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-2 leading-tight">{title}</h1>
 
                     {/* Botón favorito */}
                     <div className="mb-6">
@@ -185,7 +185,7 @@ const MangaDetails = () => {
                             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
                                 isFavorite
                                     ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30 hover:bg-rose-600'
-                                    : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-rose-400 hover:text-rose-500'
+                                    : 'bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:border-rose-400 hover:text-rose-500'
                             }`}
                         >
                             <span className="material-symbols-outlined text-lg"
@@ -197,40 +197,40 @@ const MangaDetails = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-6 mb-8 text-sm">
-                        <div className="flex items-center gap-2 text-gray-700">
+                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
                             <span className="material-symbols-outlined text-yellow-500">star</span>
                             <span className="font-bold">{manga.averageScore ? `${manga.averageScore}%` : 'N/A'}</span>
-                            <span className="text-gray-400">Score</span>
+                            <span className="text-gray-400 dark:text-gray-500">Score</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-700">
+                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
                             <span className="material-symbols-outlined text-blue-500">menu_book</span>
                             <span className="font-bold">{manga.chapters || '?'}</span>
-                            <span className="text-gray-400">Capítulos</span>
+                            <span className="text-gray-400 dark:text-gray-500">Capítulos</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-700">
+                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
                             <span className="material-symbols-outlined text-green-500">info</span>
                             <span className="font-bold capitalize">{manga.status?.toLowerCase().replace('_', ' ')}</span>
-                            <span className="text-gray-400">Estado</span>
+                            <span className="text-gray-400 dark:text-gray-500">Estado</span>
                         </div>
                     </div>
 
                     <div className="mb-10">
-                        <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary">menu_book</span>
                             Sinopsis
                         </h3>
-                        <p className="text-gray-600 leading-relaxed">{cleanDescription}</p>
+                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{cleanDescription}</p>
                     </div>
 
                     {/* Seguimiento de lectura */}
-                    {totalChapters > 0 && (
-                        <div className="mb-10 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    {(
+                        <div className="mb-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <span className="material-symbols-outlined text-primary">bookmark_added</span>
                                     Mi Progreso de Lectura
                                 </h3>
-                                {profile?.uid && readCount < totalChapters && (
+                                {profile?.uid && (readCount < totalChapters) && (
                                     <button onClick={markAllRead}
                                         className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
                                         <span className="material-symbols-outlined text-sm">done_all</span>
@@ -240,22 +240,22 @@ const MangaDetails = () => {
                             </div>
 
                             <div className="mb-4">
-                                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>{readCount} / {totalChapters} capítulos</span>
+                                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                    <span>{readCount} / {knownChapters ? totalChapters : '?'} capítulos</span>
                                     <span className="font-bold text-primary">
-                                        {Math.round((readCount / totalChapters) * 100)}%
+                                        {knownChapters ? `${Math.round((readCount / totalChapters) * 100)}%` : `${readCount} leídos`}
                                     </span>
                                 </div>
-                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-primary rounded-full transition-all duration-500"
-                                        style={{ width: `${(readCount / totalChapters) * 100}%` }}
+                                        style={{ width: knownChapters ? `${(readCount / totalChapters) * 100}%` : `${Math.min((readCount / totalChapters) * 100, 100)}%` }}
                                     />
                                 </div>
                             </div>
 
                             {!profile?.uid && (
-                                <p className="text-sm text-gray-400 italic mb-3">
+                                <p className="text-sm text-gray-400 dark:text-gray-500 italic mb-3">
                                     <button onClick={() => navigate('/login')} className="text-primary font-bold hover:underline">Inicia sesión</button>
                                     {' '}para rastrear tu lectura y ganar +2 XP por capítulo.
                                 </p>
@@ -273,8 +273,8 @@ const MangaDetails = () => {
                                                 isRead
                                                     ? 'bg-primary text-white'
                                                     : profile?.uid
-                                                        ? 'bg-gray-100 text-gray-500 hover:bg-primary/20 hover:text-primary'
-                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-primary/20 hover:text-primary'
+                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                                             }`}
                                         >
                                             {n}
@@ -283,7 +283,7 @@ const MangaDetails = () => {
                                 })}
                             </div>
                             {profile?.uid && (
-                                <p className="text-[11px] text-gray-400 mt-3 flex items-center gap-1">
+                                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[14px] text-primary">stars</span>
                                     Ganas +2 XP por cada capítulo marcado como leído
                                 </p>
@@ -294,20 +294,20 @@ const MangaDetails = () => {
                     {/* Dónde Leer */}
                     {(manga.externalLinks || []).filter(l => l.site && l.url).length > 0 && (
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary">link</span>
                                 Dónde Leer
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 {manga.externalLinks.filter(l => l.site && l.url).map((link, i) => (
                                     <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                                        className="flex items-center gap-3 bg-white border border-gray-200 hover:border-primary hover:shadow-md p-4 rounded-xl group transition-all">
-                                        <div className="size-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 transition-colors shrink-0">
-                                            <span className="material-symbols-outlined text-gray-400 group-hover:text-primary">open_in_new</span>
+                                        className="flex items-center gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary hover:shadow-md p-4 rounded-xl group transition-all">
+                                        <div className="size-10 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center group-hover:bg-primary/10 transition-colors shrink-0">
+                                            <span className="material-symbols-outlined text-gray-400 dark:text-gray-300 group-hover:text-primary">open_in_new</span>
                                         </div>
                                         <div className="flex-1 overflow-hidden">
-                                            <p className="text-sm font-bold text-gray-900 truncate group-hover:text-primary transition-colors">{link.site}</p>
-                                            <p className="text-xs text-gray-500 truncate">Ir a la web</p>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">{link.site}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Ir a la web</p>
                                         </div>
                                     </a>
                                 ))}

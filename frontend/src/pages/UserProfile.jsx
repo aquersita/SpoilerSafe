@@ -125,10 +125,14 @@ const EmptyState = ({ icon, title, hint }) => (
 /* ─── Profile Header ────────────────────────────────────────────────────────── */
 const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal, isFollowing, onEdit, onFollow, onMessage }) => {
   const xp = xpPct(profile);
+  const equippedFrame = findReward(profile?.active_frame);
+  const equippedEmoji = findReward(profile?.active_emoji);
+  const equippedBanner = findReward(profile?.active_banner);
+  const bannerSrc = profile?.banner_url || equippedBanner?.image || null;
   return (
     <div className="relative">
       <div className="relative h-44 sm:h-56 rounded-[28px] overflow-hidden ring-1 ring-slate-200/70">
-        <Cover src={profile?.banner_url} seed={profile?.username || 'banner'} alt="" className="size-full">
+        <Cover src={bannerSrc} seed={profile?.username || 'banner'} alt="" className="size-full">
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-950/15 to-transparent" />
           <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_85%_-10%,rgba(249,115,22,0.45),transparent_55%)]" />
           <svg className="absolute inset-0 size-full opacity-25" viewBox="0 0 800 200" preserveAspectRatio="none">
@@ -147,18 +151,17 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
           {/* avatar */}
           <div className="relative shrink-0">
             <div className="p-[3px] rounded-2xl"
-              style={{ background: profile?.active_frame?.preview_color || 'linear-gradient(135deg,#f97316,#fb923c)' }}>
+              style={{ background: equippedFrame?.preview_color || 'linear-gradient(135deg,#f97316,#fb923c)' }}>
               <div className="rounded-[14px] bg-white p-1">
                 <Cover src={profile?.avatar_url} seed={profile?.username} alt={profile?.username}
                   className="size-24 sm:size-28 rounded-xl" />
               </div>
             </div>
-            {profile?.active_emoji && (
+            {equippedEmoji && (
               <span className="absolute -bottom-1 -right-1 size-9 rounded-xl bg-white grid place-items-center ring-2 ring-white shadow-md overflow-hidden">
-                {profile.active_emoji.image
-                  ? <img src={profile.active_emoji.image} alt="" className="size-6 object-contain" />
-                  : <span className="text-xl">{profile.active_emoji.emoji || '⭐'}</span>
-                }
+                {equippedEmoji.image
+                  ? <img src={equippedEmoji.image} alt={equippedEmoji.name} className="size-7 object-contain" />
+                  : <span className="text-xl">{equippedEmoji.emoji || '⭐'}</span>}
               </span>
             )}
           </div>
@@ -247,8 +250,9 @@ const QuickStat = ({ icon, label, value, accent = 'text-orange-600', tone = 'bg-
 /* ─── Anime card + carousel ─────────────────────────────────────────────────── */
 const AnimeCard = ({ anime }) => {
   const navigate = _useNavigate();
+  const path = anime.media_type === 'manga' ? `/manga/${anime.id}` : `/anime/${anime.id}`;
   return (
-    <button onClick={() => navigate(`/anime/${anime.id}`)} className="group block w-[148px] shrink-0 text-left">
+    <button onClick={() => navigate(path)} className="group block w-[148px] shrink-0 text-left">
       <div className="relative aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-slate-200/70 bg-slate-100">
         <Cover src={anime.coverImage} seed={anime.title} alt={anime.title} className="size-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
@@ -383,7 +387,7 @@ const FeaturedAnimeBlock = ({ anime }) => {
             ))}
           </div>
           <div className="mt-1 flex items-center gap-2">
-            <button onClick={() => navigate(`/anime/${anime.id}`)}
+            <button onClick={() => navigate(`/${anime.media_type === 'manga' ? 'manga' : 'anime'}/${anime.id}`)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-slate-900 text-[12px] font-bold hover:bg-orange-100 transition whitespace-nowrap">
               Ir a la ficha <Svg path={ICON.arrowR} className="size-3.5" />
             </button>
@@ -577,91 +581,148 @@ const EditModal = ({ data, onChange, onSave, onClose, saving }) => (
 );
 
 /* ─── Rewards ───────────────────────────────────────────────────────────────── */
+// Emoji icons live in /public/rewards/<key>.svg (each is a normalized 48x48 SVG —
+// SVGs are passthrough; PNG/ICO sources were base64-embedded inside an SVG wrapper).
 const REWARDS = [
-  { key: 'frame_bronze',  type: 'frame',  name: 'Marco Bronce',   description: 'Nivel 2',         required_level: 2,  preview_color: '#cd7f32' },
-  { key: 'frame_silver',  type: 'frame',  name: 'Marco Plata',    description: 'Nivel 4',         required_level: 4,  preview_color: '#c0c0c0' },
-  { key: 'frame_gold',    type: 'frame',  name: 'Marco Oro',      description: 'Nivel 6',         required_level: 6,  preview_color: '#ffd700' },
-  { key: 'frame_diamond', type: 'frame',  name: 'Marco Diamante', description: 'Nivel 8',         required_level: 8,  preview_color: '#b9f2ff' },
-  { key: 'emoji_fire',    type: 'emoji',  name: '🔥 Llama',       description: '5 eps vistos',    required_episodes: 5,   emoji: '🔥' },
-  { key: 'emoji_star',    type: 'emoji',  name: '⭐ Estrella',    description: '25 eps vistos',   required_episodes: 25,  emoji: '⭐' },
-  { key: 'emoji_crown',   type: 'emoji',  name: '👑 Corona',      description: '100 eps vistos',  required_episodes: 100, emoji: '👑' },
-  { key: 'banner_orange', type: 'banner', name: 'Banner Naranja', description: 'Nivel 3',         required_level: 3,  preview_color: 'linear-gradient(135deg,#f97316,#ef4444)' },
-  { key: 'banner_blue',   type: 'banner', name: 'Banner Océano',  description: 'Nivel 5',         required_level: 5,  preview_color: 'linear-gradient(135deg,#3b82f6,#06b6d4)' },
-  { key: 'banner_purple', type: 'banner', name: 'Banner Galaxia', description: 'Nivel 7',         required_level: 7,  preview_color: 'linear-gradient(135deg,#8b5cf6,#ec4899)' },
+  // Marcos (frames)
+  { key: 'frame_bronze',  type: 'frame',  name: 'Marco Bronce',   description: 'Nivel 2', required_level: 2,  preview_color: '#cd7f32' },
+  { key: 'frame_silver',  type: 'frame',  name: 'Marco Plata',    description: 'Nivel 4', required_level: 4,  preview_color: '#c0c0c0' },
+  { key: 'frame_gold',    type: 'frame',  name: 'Marco Oro',      description: 'Nivel 6', required_level: 6,  preview_color: '#ffd700' },
+  { key: 'frame_diamond', type: 'frame',  name: 'Marco Diamante', description: 'Nivel 8', required_level: 8,  preview_color: '#b9f2ff' },
+  // Emojis (custom SVG icons)
+  { key: 'emoji_fire',        type: 'emoji', name: 'Llama',          description: '5 eps vistos',   required_episodes: 5,   image: '/rewards/fire.svg' },
+  { key: 'emoji_sakura',      type: 'emoji', name: 'Pétalo Sakura',  description: '10 eps vistos',  required_episodes: 10,  image: '/rewards/sakura.svg' },
+  { key: 'emoji_blossom',     type: 'emoji', name: 'Festival',       description: '15 eps vistos',  required_episodes: 15,  image: '/rewards/blossom.svg' },
+  { key: 'emoji_pokeball',    type: 'emoji', name: 'Pokébola',       description: '25 eps vistos',  required_episodes: 25,  image: '/rewards/pokeball.svg' },
+  { key: 'emoji_anime',       type: 'emoji', name: 'Anime & Manga',  description: '35 eps vistos',  required_episodes: 35,  image: '/rewards/anime.svg' },
+  { key: 'emoji_ninja_star',  type: 'emoji', name: 'Shuriken',       description: '50 eps vistos',  required_episodes: 50,  image: '/rewards/ninja-star.svg' },
+  { key: 'emoji_ninja_armor', type: 'emoji', name: 'Armadura Ninja', description: '75 eps vistos',  required_episodes: 75,  image: '/rewards/ninja-armor.svg' },
+  { key: 'emoji_yandere',     type: 'emoji', name: 'Yandere',        description: '100 eps vistos', required_episodes: 100, image: '/rewards/yandere.svg' },
+  { key: 'emoji_my_melody',   type: 'emoji', name: 'My Melody',      description: '125 eps vistos', required_episodes: 125, image: '/rewards/my-melody.svg' },
+  { key: 'emoji_cinnamoroll', type: 'emoji', name: 'Cinnamoroll',    description: '150 eps vistos', required_episodes: 150, image: '/rewards/cinnamoroll.svg' },
+  { key: 'emoji_kuromi',      type: 'emoji', name: 'Kuromi',         description: '175 eps vistos', required_episodes: 175, image: '/rewards/kuromi.svg' },
+  { key: 'emoji_chopper',     type: 'emoji', name: 'Chopper',        description: '200 eps vistos', required_episodes: 200, image: '/rewards/chopper.svg' },
+  { key: 'emoji_nami',        type: 'emoji', name: 'Nami',           description: '250 eps vistos', required_episodes: 250, image: '/rewards/nami.svg' },
+  { key: 'emoji_brook',       type: 'emoji', name: 'Brook',          description: '300 eps vistos', required_episodes: 300, image: '/rewards/brook.svg' },
+  // Banners
+  { key: 'banner_mecha',   type: 'banner', name: 'Banner Mecha',    description: 'Nivel 3',  required_level: 3,  image: '/rewards/banner-mecha.svg',   preview_color: '#dbeafe' },
+  { key: 'banner_academy', type: 'banner', name: 'Banner Academia', description: 'Nivel 5',  required_level: 5,  image: '/rewards/banner-academy.svg', preview_color: '#fef3c7' },
+  { key: 'banner_forest',  type: 'banner', name: 'Banner Bosque',   description: 'Nivel 7',  required_level: 7,  image: '/rewards/banner-forest.svg',  preview_color: '#d1fae5' },
+  { key: 'banner_night',   type: 'banner', name: 'Banner Noche',    description: 'Nivel 10', required_level: 10, image: '/rewards/banner-night.svg',   preview_color: '#1e1b4b' },
+  { key: 'banner_galaxy',  type: 'banner', name: 'Banner Galaxia',  description: 'Nivel 12', required_level: 12, image: '/rewards/banner-galaxy.svg',  preview_color: '#0f0a1e' },
+  { key: 'banner_lava',    type: 'banner', name: 'Banner Fuego',    description: 'Nivel 15', required_level: 15, image: '/rewards/banner-lava.svg',    preview_color: '#7f1d1d' },
 ];
+
+// active_frame / active_emoji / active_banner are stored as key strings in Firestore;
+// look them up here so the UI can pull image/preview_color from the canonical reward.
+const findReward = (key) => REWARDS.find(r => r.key === key);
+
+const REW_TABS = [
+  { id: 'frame',  label: 'Marcos' },
+  { id: 'emoji',  label: 'Emojis' },
+  { id: 'banner', label: 'Banners' },
+];
+
+// `r.image` (URL) takes precedence over `r.emoji` (text) so user-supplied SVG/PNG
+// emoji art can replace the unicode glyphs once it lands.
+const RewardItem = ({ r, isOwner, onEquip }) => {
+  const locked = !r.is_unlocked;
+  const handleClick = () => {
+    if (locked || r.is_equipped || !isOwner) return;
+    onEquip?.(r);
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={locked || r.is_equipped || !isOwner}
+      className={cls(
+        'group relative text-left p-3 rounded-xl border transition w-full',
+        r.is_equipped ? 'border-orange-300 ring-1 ring-orange-200 bg-orange-50/40' : 'border-slate-200 hover:border-slate-300 bg-white',
+        locked && 'opacity-60 cursor-not-allowed',
+      )}
+    >
+      <div className="flex items-center gap-3">
+        {r.type === 'emoji' ? (
+          <span className="grid place-items-center size-12 rounded-lg bg-slate-50 text-2xl ring-1 ring-slate-200 overflow-hidden">
+            {r.image
+              ? <img src={r.image} alt={r.name} className="size-9 object-contain" />
+              : <span>{r.emoji || '⭐'}</span>}
+          </span>
+        ) : r.type === 'banner' && r.image ? (
+          <span className="w-20 h-10 rounded-lg ring-1 ring-slate-200 overflow-hidden shrink-0">
+            <img src={r.image} alt={r.name} className="w-full h-full object-cover" />
+          </span>
+        ) : (
+          <span
+            className="size-12 rounded-lg ring-1 ring-slate-200 shrink-0"
+            style={{ background: r.preview_color || (r.type === 'banner' ? gradFor(r.name) : '#f97316') }}
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="text-[12.5px] font-bold text-slate-900 truncate">{r.name}</div>
+          <div className="mt-0.5 text-[11px] text-slate-500">
+            {locked
+              ? r.unlock_label
+              : r.is_equipped
+                ? <span className="text-orange-700 font-bold">Equipado</span>
+                : 'Disponible'}
+          </div>
+        </div>
+        {locked && <Svg path={ICON.lock} className="size-4 text-slate-400 shrink-0" />}
+      </div>
+    </button>
+  );
+};
 
 const RewardsCard = ({ profile, stats, isOwner, onEquip }) => {
   const level = profile?.level ?? 1;
   const eps   = stats?.episodes_watched ?? 0;
+  const [tab, setTab] = useState('frame');
 
-  const isUnlocked = (r) => {
-    if (r.required_level && level < r.required_level) return false;
-    if (r.required_episodes && eps < r.required_episodes) return false;
-    return true;
-  };
-
-  const isEquipped = (r) => {
-    if (r.type === 'frame')  return profile?.active_frame  === r.key;
-    if (r.type === 'banner') return profile?.active_banner === r.key;
-    if (r.type === 'emoji')  return profile?.active_emoji  === r.key;
-    return false;
-  };
-
-  const categories = [
-    { label: 'Marcos',     type: 'frame' },
-    { label: 'Emoticonos', type: 'emoji' },
-    { label: 'Banners',    type: 'banner' },
-  ];
+  const filtered = REWARDS.filter(r => r.type === tab).map(r => {
+    const is_unlocked =
+      (!r.required_level || level >= r.required_level) &&
+      (!r.required_episodes || eps >= r.required_episodes);
+    const is_equipped =
+      (r.type === 'frame'  && profile?.active_frame  === r.key) ||
+      (r.type === 'banner' && profile?.active_banner === r.key) ||
+      (r.type === 'emoji'  && profile?.active_emoji  === r.key);
+    const unlock_label = r.required_level
+      ? `Nivel ${r.required_level}`
+      : r.required_episodes
+        ? `${r.required_episodes} eps`
+        : '';
+    return { ...r, is_unlocked, is_equipped, unlock_label };
+  });
 
   return (
-    <Card>
-      <SectionHeader icon={<Svg path={ICON.trophy} className="size-3.5" />} title="Recompensas" />
-      <div className="max-h-96 overflow-y-auto space-y-4 pr-0.5 [scrollbar-width:thin] [scrollbar-color:#e2e8f0_transparent]">
-        {categories.map(({ label, type }) => (
-          <div key={type}>
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 mb-2 px-0.5">{label}</div>
-            <div className="space-y-1.5">
-              {REWARDS.filter(r => r.type === type).map((r) => {
-                const unlocked = isUnlocked(r);
-                const equipped = isEquipped(r);
-                return (
-                  <div key={r.key} className={cls(
-                    'flex items-center gap-3 p-2.5 rounded-xl border transition-all',
-                    equipped ? 'border-orange-300 bg-orange-50/60' :
-                    unlocked ? 'border-slate-200 bg-white hover:border-orange-200' :
-                    'border-slate-100 bg-slate-50/50 opacity-60'
-                  )}>
-                    <div className="size-8 rounded-lg shrink-0 flex items-center justify-center text-lg overflow-hidden"
-                      style={{ background: r.preview_color || '#f0f0f0' }}>
-                      {r.type === 'emoji' ? r.emoji : null}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-bold text-slate-800 truncate">{r.name}</p>
-                      <p className="text-[10px] text-slate-500">{r.description}</p>
-                    </div>
-                    {isOwner && unlocked && (
-                      <button
-                        onClick={() => onEquip(r)}
-                        disabled={equipped}
-                        className={cls(
-                          'shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all',
-                          equipped
-                            ? 'bg-orange-500 text-white cursor-default'
-                            : 'bg-slate-100 text-slate-600 hover:bg-orange-100 hover:text-orange-700'
-                        )}
-                      >
-                        {equipped ? 'Equipado' : 'Equipar'}
-                      </button>
-                    )}
-                    {!unlocked && (
-                      <span className="shrink-0"><Svg path={ICON.lock} className="size-3.5 text-slate-400" /></span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+    <Card padded={false}>
+      <div className="p-5 pb-3">
+        <SectionHeader icon={<Svg path={ICON.sparkle} className="size-3.5" />} title="Recompensas" className="mb-3" />
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100/70">
+          {REW_TABS.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={cls(
+                'py-1.5 rounded-lg text-[12px] font-semibold transition',
+                tab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700',
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="px-3 pb-4 max-h-[320px] overflow-y-auto space-y-2 [scrollbar-width:thin]">
+        {filtered.map(r => (
+          <RewardItem key={r.key} r={r} isOwner={isOwner} onEquip={onEquip} />
         ))}
+        {filtered.length === 0 && (
+          <p className="text-center text-[12px] text-slate-500 py-8">Sin recompensas.</p>
+        )}
       </div>
     </Card>
   );
@@ -714,7 +775,6 @@ const UserProfile = ({
   useEffect(() => {
     if (isPropDriven) return;
     window.scrollTo(0, 0);
-    document.documentElement.classList.remove('dark');
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -754,6 +814,7 @@ const UserProfile = ({
   /* ── data mapping ── */
   const mapAnime = (a) => ({
     id: a.id || a.media_id,
+    media_type: a.media_type || a.type || 'anime',
     title: a.title?.romaji || a.title?.english || a.title || '',
     coverImage: a.coverImage?.extraLarge || a.coverImage?.large || a.coverImage || a.cover_image,
     bannerImage: a.bannerImage || a.banner_image,

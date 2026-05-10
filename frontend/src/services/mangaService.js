@@ -27,3 +27,6 @@ export const searchManga = (search) =>
 
 export const getTrendingManga = () =>
   gql(`{Page(perPage:20){media(sort:TRENDING_DESC,type:MANGA){id title{romaji}coverImage{large}averageScore chapters status genres}}}`);
+
+export const getPopularManga = () =>
+  gql(`{Page(perPage:20){media(sort:POPULARITY_DESC,type:MANGA){id title{romaji}coverImage{large}averageScore chapters status genres}}}`);

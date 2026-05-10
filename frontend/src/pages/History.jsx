@@ -1,24 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const History = ({ user }) => {
     const navigate = useNavigate();
+    const { profile } = useAuth();
+    const currentUser = user || profile;
     const [history, setHistory] = useState([]);
+
+    const storageKey = currentUser?.uid ? `spoilersafe_history_${currentUser.uid}` : null;
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        const stored = JSON.parse(localStorage.getItem('spoilersafe_history') || '[]');
+        if (!storageKey) { setHistory([]); return; }
+        const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
         setHistory(stored);
-    }, []);
+    }, [storageKey]);
 
     const clearHistory = () => {
-        localStorage.removeItem('spoilersafe_history');
+        if (!storageKey) return;
+        localStorage.removeItem(storageKey);
         setHistory([]);
     };
 
     const removeItem = (index) => {
+        if (!storageKey) return;
         const updated = history.filter((_, i) => i !== index);
-        localStorage.setItem('spoilersafe_history', JSON.stringify(updated));
+        localStorage.setItem(storageKey, JSON.stringify(updated));
         setHistory(updated);
     };
 

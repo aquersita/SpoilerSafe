@@ -11,7 +11,7 @@ async function gql(query, variables = {}) {
 }
 
 const MANGA_FIELDS = `
-  id title { romaji english }
+  id idMal title { romaji english }
   coverImage { extraLarge large }
   bannerImage description status chapters volumes
   season seasonYear averageScore genres format isAdult
@@ -19,6 +19,16 @@ const MANGA_FIELDS = `
   externalLinks { site url }
   staff(perPage: 4) { nodes { name { full } primaryOccupations } }
 `;
+
+export async function getMangaChaptersFromJikan(malId) {
+  try {
+    const res = await fetch(`${JIKAN}/manga/${malId}`);
+    const data = await res.json();
+    return data?.data?.chapters ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export const getManga = (id) =>
   gql(`query($id:Int){Media(id:$id,type:MANGA){${MANGA_FIELDS}}}`, { id: parseInt(id) });

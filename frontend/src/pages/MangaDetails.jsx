@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getManga } from '../services/mangaService';
+import { getManga, getMangaChaptersFromJikan } from '../services/mangaService';
 import { getMangaProgress, markChapterRead as markChapterReadService } from '../services/progressService';
 import { checkIsFavorite, addFavorite, removeFavorite } from '../services/favoritesService';
 
@@ -23,7 +23,12 @@ const MangaDetails = () => {
             setLoading(true);
             try {
                 const res = await getManga(id);
-                setManga(res.data.Media);
+                const media = res.data.Media;
+                if ((!media.chapters || media.chapters === 0) && media.idMal) {
+                    const jikanChapters = await getMangaChaptersFromJikan(media.idMal);
+                    if (jikanChapters) media.chapters = jikanChapters;
+                }
+                setManga(media);
             } catch (err) {
                 console.error("Error fetching manga details:", err);
             } finally {

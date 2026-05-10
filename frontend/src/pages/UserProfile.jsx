@@ -572,8 +572,9 @@ const EditModal = ({ data, onChange, onSave, onClose, saving }) => {
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Bio</label>
             <textarea value={data.bio || ''} onChange={e => onChange('bio', e.target.value)}
-              placeholder="Cuéntanos algo sobre ti…" rows={3}
+              placeholder="Cuéntanos algo sobre ti…" rows={3} maxLength={500}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-400 resize-none" />
+            <span className="text-xs text-slate-400 text-right block">{(data.bio || '').length}/500</span>
           </div>
         </div>
         <div className="flex gap-2 mt-6 justify-end">

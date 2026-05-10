@@ -82,7 +82,7 @@ const ICON = {
 /* ─── atoms ─────────────────────────────────────────────────────────────────── */
 const Card = ({ children, className, padded = true }) => (
   <section className={cls(
-    'rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70',
+    'rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/60',
     'shadow-[0_1px_0_rgba(15,23,42,0.04),0_10px_30px_-18px_rgba(15,23,42,0.18)]',
     padded && 'p-5', className
   )}>{children}</section>
@@ -91,7 +91,7 @@ const Card = ({ children, className, padded = true }) => (
 const SectionHeader = ({ icon, title, hint, action, className }) => (
   <header className={cls('flex items-center justify-between mb-4', className)}>
     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-      <span className="grid place-items-center size-7 rounded-lg bg-orange-50 text-orange-600 ring-1 ring-orange-100">{icon}</span>
+      <span className="grid place-items-center size-7 rounded-lg bg-orange-50 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 ring-1 ring-orange-100 dark:ring-orange-500/25">{icon}</span>
       <h3 className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight truncate">{title}</h3>
       {hint != null && <span className="text-[11px] font-semibold text-slate-400 tabular-nums">{hint}</span>}
     </div>
@@ -113,7 +113,7 @@ const Cover = ({ src, seed = '', alt = '', className, children }) => (
 );
 
 const EmptyState = ({ icon, title, hint }) => (
-  <div className="grid place-items-center text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50">
+  <div className="grid place-items-center text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
     <span className="grid place-items-center size-10 rounded-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700 text-slate-400 mb-2">
       <Svg path={icon} className="size-4" />
     </span>
@@ -235,15 +235,15 @@ const ProfileHeader = ({ profile, isOwner, achievementsEarned, achievementsTotal
 
 /* ─── Quick stats ───────────────────────────────────────────────────────────── */
 const QuickStat = ({ icon, label, value, accent = 'text-orange-600', tone = 'bg-orange-50' }) => (
-  <div className="relative flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 shadow-[0_1px_0_rgba(15,23,42,0.04)] overflow-hidden">
+  <div className="relative flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/60 shadow-[0_1px_0_rgba(15,23,42,0.04)] overflow-hidden">
     <span className={cls('grid place-items-center size-10 rounded-xl ring-1 ring-inset ring-current/10', tone, accent)}>
       <Svg path={icon} className="size-5" />
     </span>
     <div className="min-w-0">
       <div className="text-[22px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-none tabular-nums">{value}</div>
-      <div className="mt-1 text-[10.5px] font-bold tracking-[0.14em] uppercase text-slate-400">{label}</div>
+      <div className="mt-1 text-[10.5px] font-bold tracking-[0.14em] uppercase text-slate-400 dark:text-slate-500">{label}</div>
     </div>
-    <span className="absolute -right-6 -bottom-6 size-20 rounded-full bg-gradient-to-br from-orange-100/70 to-transparent" />
+    <span className="absolute -right-6 -bottom-6 size-20 rounded-full bg-gradient-to-br from-orange-100/70 dark:from-orange-500/10 to-transparent" />
   </div>
 );
 
@@ -510,7 +510,7 @@ const RankCard = ({ profile }) => {
 const StatsListCard = ({ stats, profile }) => (
   <Card>
     <SectionHeader icon={<Svg path={ICON.layers} className="size-3.5" />} title="Estadísticas" />
-    <ul className="divide-y divide-slate-100">
+    <ul className="divide-y divide-slate-100 dark:divide-slate-700/50">
       {[
         { key: 'episodes_watched', label: 'Episodios vistos', icon: ICON.film },
         { key: 'manga_chapters',   label: 'Capítulos manga',  icon: ICON.book },
@@ -878,13 +878,13 @@ const UserProfile = ({
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f6faff]">
+    <div className="min-h-screen flex items-center justify-center bg-[#f6faff] dark:bg-gray-950">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#f6faff] text-slate-800 dark:text-slate-200 antialiased">
+    <div className="min-h-screen bg-[#f6faff] dark:bg-gray-950 text-slate-800 dark:text-slate-200 antialiased">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
 
         <ProfileHeader

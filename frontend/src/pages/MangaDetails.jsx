@@ -81,7 +81,7 @@ const MangaDetails = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
         );
@@ -89,8 +89,8 @@ const MangaDetails = () => {
 
     if (!manga) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                <span className="material-symbols-outlined text-6xl mb-4 text-gray-300 dark:text-gray-600">menu_book</span>
+            <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center text-gray-400">
+                <span className="material-symbols-outlined text-6xl mb-4 text-gray-600">menu_book</span>
                 <p>No se ha encontrado el manga.</p>
                 <button onClick={() => navigate('/manga')} className="mt-4 text-primary font-bold hover:underline">
                     Volver al Catálogo
@@ -100,6 +100,8 @@ const MangaDetails = () => {
     }
 
     const title = manga.title.romaji || manga.title.english;
+    const coverImage = manga.coverImage.extraLarge || manga.coverImage.large;
+    const bannerImage = manga.bannerImage || coverImage;
     const cleanDescription = manga.description
         ? manga.description.replace(/<[^>]*>?/gm, '')
         : "Sin sinopsis disponible.";
@@ -108,7 +110,7 @@ const MangaDetails = () => {
     const totalChapters = knownChapters ? manga.chapters : Math.max(readCount + 50, 100);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-16">
+        <>
             {/* Toast */}
             {toast && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-bold">
@@ -116,207 +118,223 @@ const MangaDetails = () => {
                 </div>
             )}
 
-            {/* Banner */}
-            <div className="w-full h-[35vh] md:h-[45vh] bg-gray-900 relative">
-                {manga.bannerImage ? (
-                    <img src={manga.bannerImage} alt="Banner" className="w-full h-full object-cover opacity-60" />
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-gray-800 to-gray-900" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-gray-900 via-gray-50/20 dark:via-gray-900/20 to-transparent" />
-            </div>
+            {/* ── HERO ── */}
+            <section className="relative w-full h-[88vh] min-h-[560px] overflow-hidden bg-gray-950">
+                <img
+                    alt={title}
+                    className="absolute inset-0 w-full h-full object-cover object-top opacity-45"
+                    src={bannerImage}
+                />
+                {/* Gradiente lateral izquierdo */}
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/75 to-transparent z-10" />
+                {/* Gradiente inferior */}
+                <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-gray-950 to-transparent z-10" />
 
-            <div className="max-w-4xl mx-auto px-4 md:px-8 relative -mt-20 md:-mt-32 z-10 flex flex-col md:flex-row gap-8">
-                {/* Left Column */}
-                <div className="w-36 md:w-48 shrink-0 mx-auto md:mx-0">
-                    <img
-                        src={manga.coverImage.extraLarge}
-                        alt={title}
-                        className="w-full rounded-xl shadow-2xl border-4 border-white dark:border-gray-800 bg-white dark:bg-gray-800"
-                    />
-                    <button
-                        onClick={() => navigate('/manga')}
-                        className="mt-6 w-full flex items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:text-primary hover:border-primary dark:hover:border-primary font-bold py-3 px-4 rounded-lg shadow-sm transition-colors"
-                    >
-                        <span className="material-symbols-outlined">arrow_back</span>
-                        Volver a Mangas
-                    </button>
-                </div>
-
-                {/* Right Column */}
-                <div className="flex-1 mt-4 md:mt-16 bg-white dark:bg-gray-800 md:bg-transparent md:dark:bg-transparent p-6 md:p-0 rounded-xl shadow-sm md:shadow-none border md:border-none border-gray-100 dark:border-gray-700">
-                    <div className="flex flex-wrap gap-2 mb-3">
-                        {manga.genres && manga.genres.map(genre => (
-                            <span key={genre} className="bg-primary/10 dark:bg-primary/20 text-primary text-xs font-bold px-2 py-1 rounded-full uppercase">
-                                {genre}
-                            </span>
-                        ))}
-                    </div>
-
-                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-2 leading-tight">{title}</h1>
-
-                    {/* Botón favorito */}
-                    <div className="mb-6">
-                        <button
-                            onClick={async () => {
-                                if (!profile?.uid) { navigate('/login'); return; }
-                                try {
-                                    if (isFavorite) {
-                                        await removeFavorite(profile.uid, 'manga', id);
-                                        setIsFavorite(false);
-                                        showToast('Eliminado de favoritos');
-                                    } else {
-                                        await addFavorite(profile.uid, {
-                                            media_id: parseInt(id),
-                                            media_type: 'manga',
-                                            title: manga.title?.romaji || manga.title?.english || '',
-                                            cover_image: manga.coverImage?.extraLarge || manga.coverImage?.large || '',
-                                            banner_image: manga.bannerImage || '',
-                                            genres: manga.genres || [],
-                                            average_score: manga.averageScore || null,
-                                        });
-                                        setIsFavorite(true);
-                                        showToast('¡Añadido a favoritos!');
-                                    }
-                                } catch (err) {
-                                    showToast('Error al actualizar favoritos');
-                                }
-                            }}
-                            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                                isFavorite
-                                    ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30 hover:bg-rose-600'
-                                    : 'bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:border-rose-400 hover:text-rose-500'
-                            }`}
-                        >
-                            <span className="material-symbols-outlined text-lg"
-                                style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>
-                                favorite
-                            </span>
-                            {isFavorite ? 'En favoritos' : 'Añadir a favoritos'}
-                        </button>
-                    </div>
-
-                    <div className="flex flex-wrap gap-6 mb-8 text-sm">
-                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                            <span className="material-symbols-outlined text-yellow-500">star</span>
-                            <span className="font-bold">{manga.averageScore ? `${manga.averageScore}%` : 'N/A'}</span>
-                            <span className="text-gray-400 dark:text-gray-500">Score</span>
+                <div className="relative z-20 h-full max-w-[1400px] mx-auto px-6 md:px-10 flex items-center">
+                    <div className="flex items-end gap-10 w-full pb-12">
+                        {/* Cover poster */}
+                        <div className="hidden lg:block shrink-0 self-end">
+                            <img
+                                src={coverImage}
+                                alt={title}
+                                className="w-48 xl:w-56 rounded-xl shadow-2xl shadow-black/60 border border-white/10 object-cover aspect-[2/3]"
+                            />
                         </div>
-                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                            <span className="material-symbols-outlined text-blue-500">menu_book</span>
-                            <span className="font-bold">{manga.chapters || '?'}</span>
-                            <span className="text-gray-400 dark:text-gray-500">Capítulos</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                            <span className="material-symbols-outlined text-green-500">info</span>
-                            <span className="font-bold capitalize">{manga.status?.toLowerCase().replace('_', ' ')}</span>
-                            <span className="text-gray-400 dark:text-gray-500">Estado</span>
-                        </div>
-                    </div>
 
-                    <div className="mb-10">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary">menu_book</span>
-                            Sinopsis
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{cleanDescription}</p>
-                    </div>
-
-                    {/* Seguimiento de lectura */}
-                    {(
-                        <div className="mb-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">bookmark_added</span>
-                                    Mi Progreso de Lectura
-                                </h3>
-                                {profile?.uid && (readCount < totalChapters) && (
-                                    <button onClick={markAllRead}
-                                        className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
-                                        <span className="material-symbols-outlined text-sm">done_all</span>
-                                        Marcar todo
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="mb-4">
-                                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                    <span>{readCount} / {knownChapters ? totalChapters : '?'} capítulos</span>
-                                    <span className="font-bold text-primary">
-                                        {knownChapters ? `${Math.round((readCount / totalChapters) * 100)}%` : `${readCount} leídos`}
+                        {/* Contenido principal */}
+                        <div className="flex-1 space-y-4 max-w-2xl">
+                            {/* Chips de info */}
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                                <span className="bg-primary text-white px-3 py-1 rounded-full uppercase tracking-wide">
+                                    {manga.status === 'RELEASING' ? 'En emisión' : manga.status === 'FINISHED' ? 'Finalizado' : manga.status || 'Finalizado'}
+                                </span>
+                                {manga.averageScore && (
+                                    <span className="flex items-center gap-1 bg-yellow-400/15 text-yellow-300 border border-yellow-400/30 px-2.5 py-1 rounded-full">
+                                        <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                        {(manga.averageScore / 10).toFixed(1)}
                                     </span>
-                                </div>
-                                <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-primary rounded-full transition-all duration-500"
-                                        style={{ width: knownChapters ? `${(readCount / totalChapters) * 100}%` : `${Math.min((readCount / totalChapters) * 100, 100)}%` }}
-                                    />
-                                </div>
-                            </div>
-
-                            {!profile?.uid && (
-                                <p className="text-sm text-gray-400 dark:text-gray-500 italic mb-3">
-                                    <button onClick={() => navigate('/login')} className="text-primary font-bold hover:underline">Inicia sesión</button>
-                                    {' '}para rastrear tu lectura y ganar +2 XP por capítulo.
-                                </p>
-                            )}
-
-                            <div className="grid grid-cols-8 sm:grid-cols-12 md:grid-cols-16 gap-1.5 max-h-48 overflow-y-auto">
-                                {Array.from({ length: totalChapters }, (_, i) => i + 1).map(n => {
-                                    const isRead = readChapters.has(n);
-                                    return (
-                                        <button
-                                            key={n}
-                                            onClick={() => markChapterRead(n)}
-                                            title={`Cap. ${n}${isRead ? ' (leído)' : ' — +2 XP'}`}
-                                            className={`aspect-square rounded text-[10px] font-bold transition-all ${
-                                                isRead
-                                                    ? 'bg-primary text-white'
-                                                    : profile?.uid
-                                                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-primary/20 hover:text-primary'
-                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                                            }`}
-                                        >
-                                            {n}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            {profile?.uid && (
-                                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-3 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[14px] text-primary">stars</span>
-                                    Ganas +2 XP por cada capítulo marcado como leído
-                                </p>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Dónde Leer */}
-                    {(manga.externalLinks || []).filter(l => l.site && l.url).length > 0 && (
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary">link</span>
-                                Dónde Leer
-                            </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                {manga.externalLinks.filter(l => l.site && l.url).map((link, i) => (
-                                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                                        className="flex items-center gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary hover:shadow-md p-4 rounded-xl group transition-all">
-                                        <div className="size-10 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center group-hover:bg-primary/10 transition-colors shrink-0">
-                                            <span className="material-symbols-outlined text-gray-400 dark:text-gray-300 group-hover:text-primary">open_in_new</span>
-                                        </div>
-                                        <div className="flex-1 overflow-hidden">
-                                            <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">{link.site}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Ir a la web</p>
-                                        </div>
-                                    </a>
+                                )}
+                                <span className="text-gray-500">·</span>
+                                {manga.genres?.slice(0, 3).map((g, i) => (
+                                    <span key={i} className="text-gray-300 font-normal">{g}</span>
                                 ))}
                             </div>
+
+                            {/* Título */}
+                            <h1
+                                className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-none tracking-tight drop-shadow-xl"
+                                style={{ fontFamily: "'Arial Black', sans-serif" }}
+                            >
+                                {title}
+                            </h1>
+
+                            {/* Descripción */}
+                            <p className="text-gray-300 text-sm md:text-base leading-relaxed line-clamp-3 max-w-xl">
+                                {cleanDescription}
+                            </p>
+
+                            {/* Botones */}
+                            <div className="flex items-center gap-3 pt-2 flex-wrap">
+                                {/* Favorito */}
+                                <button
+                                    title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                                    onClick={async () => {
+                                        if (!profile?.uid) { navigate('/login'); return; }
+                                        try {
+                                            if (isFavorite) {
+                                                await removeFavorite(profile.uid, 'manga', id);
+                                                setIsFavorite(false);
+                                                showToast('Eliminado de favoritos');
+                                            } else {
+                                                await addFavorite(profile.uid, {
+                                                    media_id: parseInt(id),
+                                                    media_type: 'manga',
+                                                    title: manga.title?.romaji || manga.title?.english || '',
+                                                    cover_image: manga.coverImage?.extraLarge || manga.coverImage?.large || '',
+                                                    banner_image: manga.bannerImage || '',
+                                                    genres: manga.genres || [],
+                                                    average_score: manga.averageScore || null,
+                                                });
+                                                setIsFavorite(true);
+                                                showToast('¡Añadido a favoritos!');
+                                            }
+                                        } catch (err) {
+                                            showToast('Error al actualizar favoritos');
+                                        }
+                                    }}
+                                    className={`flex items-center gap-2 py-3 px-7 rounded-lg font-black text-sm uppercase tracking-wide transition-all hover:scale-105 active:scale-100 ${
+                                        isFavorite
+                                            ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/40'
+                                            : 'border-2 border-white/30 hover:border-rose-400/60 text-white bg-white/5 hover:bg-rose-500/10'
+                                    }`}
+                                >
+                                    <span className="material-icons-outlined text-xl">{isFavorite ? 'favorite' : 'favorite_border'}</span>
+                                    {isFavorite ? 'En favoritos' : 'Favoritos'}
+                                </button>
+
+                                {/* Volver */}
+                                <button
+                                    onClick={() => navigate('/manga')}
+                                    className="flex items-center gap-2 border-2 border-white/30 hover:border-white/70 text-white font-bold py-3 px-6 rounded-lg bg-white/5 hover:bg-white/10 backdrop-blur-sm transition-all text-sm uppercase tracking-wide"
+                                >
+                                    <span className="material-symbols-outlined">arrow_back</span>
+                                    Volver a Mangas
+                                </button>
+                            </div>
+
+                            {/* Stats rápidos */}
+                            <div className="flex items-center gap-5 text-xs text-gray-500 pt-1">
+                                <span>{manga.chapters || '?'} capítulos</span>
+                                <span className="capitalize">{manga.status?.toLowerCase().replace('_', ' ')}</span>
+                                <span className="bg-white/10 text-gray-300 px-2 py-0.5 rounded border border-white/10">Manga</span>
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Progreso de lectura ── */}
+            <section className="py-12 bg-gray-950 border-t border-gray-800/50 min-h-[400px]">
+                <div className="max-w-[1600px] mx-auto px-8">
+                    <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-200 flex items-center gap-2">
+                            <span className="w-1 h-6 bg-primary block rounded-full"></span>
+                            Mi Progreso de Lectura
+                            <span className="text-sm font-normal text-gray-500 ml-2">
+                                ({readCount} / {knownChapters ? totalChapters : '?'} capítulos{manga.status === 'RELEASING' ? ' • En emisión' : ''})
+                            </span>
+                        </h2>
+                        {profile?.uid && (readCount < totalChapters) && (
+                            <button onClick={markAllRead}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">done_all</span>
+                                Marcar todo
+                            </button>
+                        )}
+                        {readCount === totalChapters && totalChapters > 0 && (
+                            <span className="flex items-center gap-1.5 text-green-500 text-sm font-bold">
+                                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                Completado
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Barra de progreso */}
+                    <div className="mb-6">
+                        <div className="flex justify-between text-xs text-gray-500 mb-1">
+                            <span className="font-bold text-primary">
+                                {knownChapters ? `${Math.round((readCount / totalChapters) * 100)}%` : `${readCount} leídos`}
+                            </span>
+                        </div>
+                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-primary rounded-full transition-all duration-500"
+                                style={{ width: knownChapters ? `${(readCount / totalChapters) * 100}%` : `${Math.min((readCount / totalChapters) * 100, 100)}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {!profile?.uid && (
+                        <p className="text-sm text-gray-500 italic mb-3">
+                            <button onClick={() => navigate('/login')} className="text-primary font-bold hover:underline">Inicia sesión</button>
+                            {' '}para rastrear tu lectura y ganar +2 XP por capítulo.
+                        </p>
+                    )}
+
+                    <div className="grid grid-cols-8 sm:grid-cols-12 md:grid-cols-16 gap-1.5 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                        {Array.from({ length: totalChapters }, (_, i) => i + 1).map(n => {
+                            const isRead = readChapters.has(n);
+                            return (
+                                <button
+                                    key={n}
+                                    onClick={() => markChapterRead(n)}
+                                    title={`Cap. ${n}${isRead ? ' (leído)' : ' — +2 XP'}`}
+                                    className={`aspect-square rounded text-[10px] font-bold transition-all ${
+                                        isRead
+                                            ? 'bg-primary text-white'
+                                            : profile?.uid
+                                                ? 'bg-gray-800 text-gray-400 hover:bg-primary/20 hover:text-primary'
+                                                : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                                    }`}
+                                >
+                                    {n}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    {profile?.uid && (
+                        <p className="text-[11px] text-gray-500 mt-3 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px] text-primary">stars</span>
+                            Ganas +2 XP por cada capítulo marcado como leído
+                        </p>
                     )}
                 </div>
-            </div>
-        </div>
+            </section>
+
+            {/* ── Dónde Leer ── */}
+            {(manga.externalLinks || []).filter(l => l.site && l.url).length > 0 && (
+                <section className="py-10 bg-gray-950 border-t border-gray-800/50">
+                    <div className="max-w-[1600px] mx-auto px-8">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-200 flex items-center gap-2 mb-6">
+                            <span className="w-1 h-6 bg-primary block rounded-full"></span>
+                            Dónde Leer
+                        </h2>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {manga.externalLinks.filter(l => l.site && l.url).map((link, i) => (
+                                <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                                   className="flex items-center gap-3 bg-gray-900 border border-gray-800 hover:border-primary hover:shadow-md p-4 rounded-lg group transition-all">
+                                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-primary/10 shrink-0">
+                                        <span className="material-symbols-outlined text-gray-500 group-hover:text-primary text-lg">open_in_new</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-300 group-hover:text-primary truncate transition-colors">{link.site}</span>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+        </>
     );
 };
 
